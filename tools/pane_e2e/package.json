@@ -1,0 +1,14 @@
+{
+  "name": "pane_e2e",
+  "version": "1.0.0",
+  "description": "Run `./tools/pane_e2e/run.sh` with `hermes` on PATH and Node Playwright plus its Chromium browser installed. The script creates a temporary HOME and HERMES_HOME, links the current plugin as `hail-hermes`, configures the webapp on port 19120, opens its one-use link in muted headless Chromium with fake media, and stops the isolated gateway on exit. It never uses the real `~/.hermes` configuration or port 9120. Screenshots are written to `tools/pane_e2e/out/` as `chip.png`, `popover.png`, and `big-tab.png`.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.65.0"
+  }
+}

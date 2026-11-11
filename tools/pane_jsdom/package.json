@@ -1,0 +1,12 @@
+{
+  "name": "pane-jsdom",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only harness: run plugin/hail_hermes/desktop/plugin.js in jsdom with the stand-in SDK and click through every tab. Not shipped. Copy this file next to run.mjs in a scratch directory, npm i, then `node run.mjs <repo>`.",
+  "devDependencies": {
+    "jsdom": "25.0.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

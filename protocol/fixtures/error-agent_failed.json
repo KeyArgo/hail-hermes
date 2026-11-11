@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "agent_failed",
+  "message": "Agent execution encountered an error."
+}

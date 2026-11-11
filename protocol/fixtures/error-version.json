@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "version",
+  "message": "Protocol version mismatch. Expected v2."
+}

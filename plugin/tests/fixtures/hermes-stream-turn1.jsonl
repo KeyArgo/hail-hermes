@@ -1,0 +1,8 @@
+{"type": "system", "subtype": "init", "model": "", "session_id": "", "timestamp": 1793851541374}
+{"type": "text", "text": "Sun", "timestamp": 1793851551760}
+{"type": "text", "text": "flower", "timestamp": 1793851551760}
+{"type": "text", "text": " —", "timestamp": 1793851551830}
+{"type": "text", "text": " got", "timestamp": 1793851551847}
+{"type": "text", "text": " it", "timestamp": 1793851551849}
+{"type": "text", "text": ".", "timestamp": 1793851551850}
+{"type": "result", "session_id": "local-668a88d9bfe289e5d7e9780d4efa9c6399a320b5665e89f6c3b9a6882368c2dc", "exit_code": 0, "text": "Sunflower — got it.", "tokens": {"input": 21830, "output": 7, "total": 21837, "cache_read": 0, "cache_write": 0}, "duration_ms": 11087, "timestamp": 1793851552461}

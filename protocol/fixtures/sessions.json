@@ -1,0 +1,11 @@
+{
+  "v": 2,
+  "type": "sessions",
+  "items": [
+    {
+      "id": "local-abc123",
+      "title": "Fix the login bug",
+      "age": "2h ago"
+    }
+  ]
+}

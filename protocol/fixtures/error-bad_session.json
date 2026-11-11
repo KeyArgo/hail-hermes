@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "bad_session",
+  "message": "That session can't be opened."
+}

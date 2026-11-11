@@ -1,0 +1,150 @@
+{
+  "wizard.welcome": {
+    "text": "Welcome, let's set up your talking helper.",
+    "button": "Start Setup"
+  },
+  "wizard.cloud_default": {
+    "text": "Use your Hermes subscription to listen and speak.",
+    "button": "Use Subscription"
+  },
+  "wizard.upgrade_local_speech": {
+    "text": "Have your helper hear and speak on this device.",
+    "button": "Use This Device"
+  },
+  "wizard.upgrade_gpu_voices": {
+    "text": "Use a stronger device for nicer voices.",
+    "button": "Upgrade Voices"
+  },
+  "wizard.upgrade_fast_model": {
+    "text": "Pick a quicker helper for faster answers.",
+    "button": "Upgrade Thinking"
+  },
+  "wizard.needs_ffmpeg": {
+    "text": "Your helper needs one extra piece to speak.",
+    "button": "Install It"
+  },
+  "wizard.done": {
+    "text": "Your talking helper is ready.",
+    "button": null
+  },
+  "talk.hold_to_talk": {
+    "text": "Hold the button while you talk.",
+    "button": "Got It"
+  },
+  "talk.listening": {
+    "text": "I am listening now.",
+    "button": null
+  },
+  "talk.thinking": {
+    "text": "I am thinking now.",
+    "button": null
+  },
+  "talk.still_working": {
+    "text": "Please wait, I am still working on it.",
+    "button": null
+  },
+  "talk.speaking": {
+    "text": "I am speaking now.",
+    "button": "Stop Talking"
+  },
+  "talk.didnt_catch": {
+    "text": "I did not catch that, please say it again.",
+    "button": "Try Again"
+  },
+  "talk.hold_longer": {
+    "text": "Please hold the button a bit longer.",
+    "button": "Got It"
+  },
+  "talk.too_long": {
+    "text": "That talk was too long, please try a shorter one.",
+    "button": "Try Again"
+  },
+  "talk.mic_blocked": {
+    "text": "Your microphone seems covered, please open it.",
+    "button": "Open Mic"
+  },
+  "talk.no_voice_setup": {
+    "text": "Your talking helper is not set up yet.",
+    "button": "Set Up"
+  },
+  "talk.stop": {
+    "text": "Stop the helper from speaking.",
+    "button": "Stop Talking"
+  },
+  "watch.find": {
+    "text": "Tap the button to find your watch.",
+    "button": "Find Watch"
+  },
+  "watch.searching": {
+    "text": "I am looking for your watch now.",
+    "button": null
+  },
+  "watch.approve": {
+    "text": "Check your watch for the number {code}.",
+    "button": "Approve It"
+  },
+  "watch.connected": {
+    "text": "Your watch is connected now.",
+    "button": null
+  },
+  "watch.not_found_same_wifi": {
+    "text": "Put your watch and this computer on the same home Wi-Fi.",
+    "button": "Try Again"
+  },
+  "watch.cant_reach": {
+    "text": "I cannot reach your watch right now.",
+    "button": "Try Again"
+  },
+  "watch.lost_connection": {
+    "text": "I lost touch with your watch.",
+    "button": "Reconnect Now"
+  },
+  "watch.forget": {
+    "text": "Do you want to forget this watch?",
+    "button": "Forget Watch"
+  },
+  "watch.battery": {
+    "text": "Your watch battery is at {percent} percent.",
+    "button": null
+  },
+  "sessions.open_in_hermes": {
+    "text": "Open this talk in the Hermes app.",
+    "button": "Open Hermes"
+  },
+  "sessions.new_slot": {
+    "text": "Make room for a new talk.",
+    "button": "New Talk"
+  },
+  "memory.confirm_save": {
+    "text": "Do you want to save this note: {text}?",
+    "button": "Save Note"
+  },
+  "memory.saved": {
+    "text": "Your note is saved.",
+    "button": null
+  },
+  "character.upload_face": {
+    "text": "Upload a face picture for your helper.",
+    "button": "Upload Face"
+  },
+  "character.face_too_big": {
+    "text": "That face picture is too big.",
+    "button": "Choose Another"
+  },
+  "soul.preview": {
+    "text": "Look at this personality before you save it.",
+    "button": "See It"
+  },
+  "soul.saved": {
+    "text": "Your helper personality is saved.",
+    "button": null
+  },
+  "soul.reset": {
+    "text": "Do you want to reset the personality?",
+    "button": "Reset Now"
+  },
+  "error.generic": {
+    "text": "Something went wrong, so please try again.",
+    "button": "Try Again"
+  }
+}

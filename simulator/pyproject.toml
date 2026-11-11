@@ -1,0 +1,21 @@
+[project]
+name = "pocket-sim"
+version = "0.1.0"
+description = "Hermes Pocket simulator"
+requires-python = ">=3.11"
+dependencies = ["websockets>=12"]
+
+[project.scripts]
+pocket-sim = "pocket_sim.cli:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pocket_sim*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

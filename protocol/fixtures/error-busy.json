@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "busy",
+  "message": "Maximum pending pairing requests reached."
+}

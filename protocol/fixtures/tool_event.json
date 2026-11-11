@@ -1,0 +1,9 @@
+{
+  "v": 2,
+  "type": "tool_event",
+  "name": "Galaxy Watch",
+  "args": {
+    "location": "London, UK",
+    "units": "celsius"
+  }
+}

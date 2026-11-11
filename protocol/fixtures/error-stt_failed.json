@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "stt_failed",
+  "message": "Speech-to-text processing failed."
+}

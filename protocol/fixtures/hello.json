@@ -1,0 +1,14 @@
+{
+  "v": 2,
+  "type": "hello",
+  "device_id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Galaxy Watch",
+  "kind": "wear",
+  "caps": {
+    "push": true,
+    "haptic": true,
+    "led": false,
+    "battery": true
+  },
+  "token": "EXAMPLE-not-a-real-token-0123456789abcdefghij"
+}

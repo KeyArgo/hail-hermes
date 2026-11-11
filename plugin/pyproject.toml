@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hail-hermes"
+version = "1.0.0"
+description = "Hail Hermes hub: WebSocket hub + Hermes plugin bridging phones/watches to the Hermes agent"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = ["websockets>=13,<16"]
+
+[project.optional-dependencies]
+# Bounded on both sides: the catalog asks for a compatible floor AND a ceiling, so an extra cannot
+# silently pull a major version that changes behaviour under a user who only ran `pip install`.
+yaml = ["PyYAML>=6,<7"]
+tts = ["edge-tts>=6,<8"]
+# The four model workers are separate processes, each run by its own interpreter
+# (~/.hermes/voice-venv for kokoro/parakeet, ~/.local/share/pocket-piper-venv for piper), so
+# these never load in the hub's process — they are imported lazily inside each worker's setup.
+# Declaring them keeps "which packages does this need?" answerable from the manifest.
+tts-kokoro = ["kokoro-onnx>=0.4,<1", "onnxruntime>=1.17,<2"]
+stt-parakeet = ["sherpa-onnx>=1.10,<2"]
+tts-piper = ["piper-tts>=1.2,<2"]
+test = ["pytest>=8,<10", "numpy>=1.26,<3"]
+
+[project.scripts]
+hail-hermes = "hail_hermes.cli:main"
+pocket-hub = "hail_hermes.cli:main"
+
+[project.entry-points."hermes_agent.plugins"]
+hail-hermes = "hail_hermes:register"
+
+[tool.setuptools]
+packages = ["hail_hermes"]
+
+[tool.setuptools.package-data]
+hail_hermes = ["plugin.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

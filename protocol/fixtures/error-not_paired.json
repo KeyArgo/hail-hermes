@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "not_paired",
+  "message": "Device is not paired or pairing is pending."
+}

@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "audio_start",
+  "codec": "pcm16le",
+  "rate": 16000
+}

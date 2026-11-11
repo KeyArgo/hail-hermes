@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "denied",
+  "message": "Pairing request was denied by the owner."
+}

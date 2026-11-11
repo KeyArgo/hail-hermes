@@ -1,0 +1,29 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+build/
+.gradle/
+.kotlin/
+local.properties
+*.apk
+.lanes/
+lanes/
+logs/
+opencode.json
+DONE.md
+docs/HANDOVER-LIVE.md.tmp
+
+# vendored tooling
+node_modules/
+tools/pane_e2e/node_modules/
+*.egg-info/
+
+# cross-platform test harness (scripts/test.sh, scripts/test-windows.ps1)
+.venv-test/
+.venv-win/
+RESULT.txt
+
+# aislop: the finding history is engine state, not source
+.aislop/history.jsonl
+BUILD_INFO.json

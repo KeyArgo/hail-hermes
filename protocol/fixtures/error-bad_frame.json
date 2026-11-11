@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "bad_frame",
+  "message": "Audio frame length must be even."
+}

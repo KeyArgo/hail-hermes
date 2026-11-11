@@ -1,0 +1,2 @@
+# facesmith runtime dependencies (Pillow only, per the brief).
+Pillow>=10.0

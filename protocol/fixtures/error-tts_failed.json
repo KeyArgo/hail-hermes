@@ -1,0 +1,6 @@
+{
+  "v": 2,
+  "type": "error",
+  "code": "tts_failed",
+  "message": "Text-to-speech synthesis failed."
+}
