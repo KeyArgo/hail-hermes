@@ -2,10 +2,12 @@
 
 **Talk to your Hermes agent out loud — in the desktop panel, or from a watch it pairs with in four digits.**
 
+[![release](https://img.shields.io/github/v/release/KeyArgo/hail-hermes)](https://github.com/KeyArgo/hail-hermes/releases/latest)
 ![tests](https://img.shields.io/badge/tests-403%20passing-brightgreen)
 ![version](https://img.shields.io/badge/version-1.0.0-blue)
 ![licence](https://img.shields.io/badge/licence-MIT-green)
 ![platform](https://img.shields.io/badge/desktop%20%7C%20Wear%20OS-4.6%2B-informational)
+[![stars](https://img.shields.io/github/stars/KeyArgo/hail-hermes?style=social)](https://github.com/KeyArgo/hail-hermes/stargazers)
 
 <p align="center"><img src="assets/screenshots/watch-ready.png" width="300" alt="Hail Hermes on a Galaxy Watch, ready to talk"/> <img src="assets/screenshots/watch-speaking.png" width="300" alt="Hail Hermes answering out loud on the watch"/></p>
 
