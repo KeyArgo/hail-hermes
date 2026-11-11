@@ -14,7 +14,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      # The ubuntu runner ships the Android SDK (ANDROID_HOME is set); setup-android@v3 currently fails on a preview-license prompt.
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew :app:assembleDebug :app:testDebugUnitTest
         working-directory: android
