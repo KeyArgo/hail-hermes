@@ -81,8 +81,14 @@ def check(release: bool) -> list[str]:
 
     for rel in mirrors():
         text = (ROOT / rel).read_text(encoding="utf-8") if (ROOT / rel).is_file() else ""
-        pattern = (r"""^version:\s*["']?%s["']?\s*$""" if rel.endswith((".yaml", ".yml"))
-                   else r"""(?:__version__|VERSION)\s*=\s*["']%s["']""")
+        if rel.endswith((".yaml", ".yml")):
+            pattern = r"""^version:\s*["']?%s["']?\s*$"""
+        elif rel.endswith(".toml"):
+            pattern = r"""^version\s*=\s*["']%s["']"""
+        elif rel.endswith(".json"):
+            pattern = r'"version"\s*:\s*"%s"'
+        else:
+            pattern = r"""(?:__version__|VERSION)\s*=\s*["']%s["']"""
         if not re.search(pattern % re.escape(version), text, re.M):
             errors.append(f"{rel} does not declare version {version} (it must mirror plugin.yaml)")
 
