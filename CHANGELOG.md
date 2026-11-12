@@ -6,6 +6,7 @@ shown **in the pane header** and at `GET /v1/version`. The status bar carries on
 
 ## Unreleased
 
+- **Windows: a retried pairing code is explained correctly.** Two attempts inside one ~15 ms clock tick shared a timestamp, so typing the older code said the watch had left instead of naming the newer code. Attempts now carry an arrival number.
 - **A catalog install no longer reads `-dev`.** The version chip treated any untagged checkout as a development build, and a catalog install carries no tags.
 - **The pane stub tool registers the plugin the way the test harness does.**
 - **The version chip tells a release from a development build.** A catalog install of the pinned commit, or a checkout at the release tag, reads `X.Y.Z`; any other build reads `X.Y.Z-dev`. `tools/release_check.py` and the release workflow keep the version, the changelog, the tag and the GitHub release in step.

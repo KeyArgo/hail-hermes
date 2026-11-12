@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from conftest import Client, EchoTTS, FakeAgent, RecordingSTT, is_type, make_script, running_hub
+from conftest import TIMEOUT, Client, EchoTTS, FakeAgent, RecordingSTT, is_type, make_script, running_hub
 from hail_hermes.agent import HermesCliAgent, parse_sessions_table
 from hail_hermes.cli import build_hub
 from hail_hermes.quick import HANDOFF_MARKER, QuickAgent
@@ -238,7 +238,7 @@ async def test_handoff_split_marker_speaks_on_it_and_delivers_result_later(state
                 assert [m["text"] for m in asst_msgs if m["final"]] == ["On it."]
                 assert any(isinstance(m, dict) and m.get("type") == "audio_start" for m in on_it_msgs)
 
-                await asyncio.wait_for(full.started.wait(), 2.0)
+                await asyncio.wait_for(full.started.wait(), TIMEOUT)
                 # Interrupt while idle must not cancel the background hand-off
                 await c.send("interrupt")
                 assert not full.cancelled.is_set()
@@ -279,7 +279,7 @@ async def test_handoff_when_busy_sends_notify_and_failure_speaks_fallback(state_
             await c.pair(modes=True)
             await c.send("text", text="Run long task")
             await c.until(is_type("state", screen="idle"))
-            await asyncio.wait_for(full.started.wait(), 2.0)
+            await asyncio.wait_for(full.started.wait(), TIMEOUT)
 
             # Start a new turn so the device is busy when hand-off finishes; must not cancel hand-off
             await c.send("text", text="Keep me busy")

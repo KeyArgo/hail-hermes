@@ -352,3 +352,20 @@ def test_pairing_never_approves_itself(monkeypatch):
     source = (Path(__file__).resolve().parents[1] / "hail_hermes" / "hub.py").read_text(encoding="utf-8")
     for forbidden in ("auto_approving", "auto_approve_pairing", "_pair_window", "pair_open"):
         assert forbidden not in source, f"silent pairing shortcut came back: {forbidden}"
+
+
+def test_two_attempts_in_one_clock_tick_still_know_which_is_newer():
+    """Windows' monotonic clock ticks every ~15 ms, so two quick attempts can share `created`.
+
+    The older one must still be explained as replaced by the newer, not as a watch that left."""
+    from types import SimpleNamespace
+
+    from hail_hermes.hub import PendingPair, PocketHub
+
+    device = SimpleNamespace(device_id="watch-1")
+    now = time.monotonic()
+    old, new = (PendingPair(ws=None, device=device, request_id=rid, match_code=code, remote="",
+                            created=now, deadline=now + 60, decision=None)
+                for rid, code in (("old", "1111"), ("new", "2222")))
+    hub = SimpleNamespace(pending={"old": old, "new": new})
+    assert PocketHub._pair_gone_reason(hub, old) == "replaced"

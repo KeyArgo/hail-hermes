@@ -19,7 +19,7 @@ from hail_hermes.control import ControlClient
 from hail_hermes.hub import HubConfig, PocketHub
 from hail_hermes.store import Store
 
-TIMEOUT = 5.0
+TIMEOUT = 15.0  # generous for shared CI runners; a passing wait returns as soon as the message lands
 
 
 def pid_alive(pid: int) -> bool:

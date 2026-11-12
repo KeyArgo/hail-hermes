@@ -12,6 +12,7 @@ import contextlib
 import difflib
 from collections import deque
 import hmac
+import itertools
 import hashlib
 import socket
 import struct
@@ -316,6 +317,9 @@ class PendingPair:
     created: float
     deadline: float
     decision: asyncio.Future[str]
+    # Arrival order. ``created`` is a monotonic clock that ticks every ~15 ms on Windows, so two
+    # quick attempts can share a timestamp; the sequence still says which one is newer.
+    seq: int = field(default_factory=itertools.count().__next__)
 
 
 # What to tell the owner when the pairing request they answered is no longer pending.
@@ -716,7 +720,7 @@ class PocketHub:
         if pending.deadline <= time.monotonic():
             return "expired"
         newer = [p for p in self.pending.values()
-                 if p.device.device_id == pending.device.device_id and p.created > pending.created]
+                 if p.device.device_id == pending.device.device_id and p.seq > pending.seq]
         return "replaced" if newer else "watch_left"
 
     def _pair_gone_message(self, request_id: Any, match_code: Any) -> str:
