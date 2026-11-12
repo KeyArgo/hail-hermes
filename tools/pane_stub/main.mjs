@@ -117,7 +117,7 @@ const ctx = {
   }
 }
 
-plugin.default.register(ctx)
+plugin.register(ctx)
 
 // Render the status-bar item (area 'right', render() -> React element).
 const statusBar = document.getElementById('status-bar')
