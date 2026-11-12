@@ -1,5 +1,9 @@
 # Hail Hermes — 90-second demo, panel first
 
+_The 90-second recording script that leads with the desktop panel and needs no hardware._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 The recording script for the hackathon submission. The watch appears at 1:10 and never before it:
 **the panel alone carries this video**, so it records the same way with or without hardware.
 
@@ -58,7 +62,7 @@ No watch: skip the beat and say "and it pairs with a Wear OS watch in four digit
 ## Beat 7 — 1:26–1:30 — The close
 
 Screen: the panel, build stamp readable.
-Say: "Hail Hermes. 373 tests, no npm dependencies, and a build stamp that proves which one you are
+Say: "Hail Hermes. 409 tests, no npm dependencies, and a build stamp that proves which one you are
 looking at."
 
 ## Rules
@@ -68,3 +72,7 @@ looking at."
 - Never claim the face is driven by real audio without showing beat 4 in the same take.
 - One take, no cuts mid-beat. A visible edit in beat 4 reads as a fake.
 - If a beat fails, keep going: a shown recovery is more convincing than a perfect run.
+
+---
+
+Back to [docs/README.md](README.md).

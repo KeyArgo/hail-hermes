@@ -1,5 +1,9 @@
 # Install Hail Hermes
 
+_Install the plugin, turn on the desktop part, and optionally pair a watch._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 Two commands and one switch. You do not copy files anywhere.
 
 ## 1. Install the plugin
@@ -71,3 +75,22 @@ intended way to try it before pairing hardware.
 | No sound | `hermes pm install --tools-only`, then `hermes hail restart` |
 | Model list looks empty | that list is *optional* Quick Ask endpoints; the picker above it is what replies |
 | Watch will not pair | codes expire — press **Let my watch connect** again for a fresh one |
+
+## Upgrade, uninstall, and your data
+
+Upgrade by running the install command again, or with `hermes plugins update hail-hermes`. The
+watch APK is updated separately from the latest release.
+
+```bash
+hermes plugins remove hail-hermes
+```
+
+Removing the plugin leaves its state behind: settings, pairings, logs, `brief.json`, `soul.md` and
+any uploaded face live under `<profile>/hail-hermes` (or `$HAIL_HERMES_STATE`; legacy
+`<profile>/pocket` is still used when it exists). Delete that directory to remove everything, or
+revoke one device with `hermes hail devices` and `hermes hail revoke <device-id>`. The full
+file-by-file list is in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+---
+
+Back to [docs/README.md](README.md).

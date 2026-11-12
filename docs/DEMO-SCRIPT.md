@@ -1,5 +1,9 @@
 # Hail Hermes — 90-second live demo script
 
+_The 90-second device walkthrough for recording a real watch._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 > **For the hackathon submission use `docs/DEMO-SCRIPT-PANEL.md`** — it leads with the panel and needs
 > no hardware. This script is the device walkthrough, kept for recording a real watch.
 
@@ -103,3 +107,7 @@ run the whole product without hardware, and that the watch adds the wrist.
   hub dies, refusal of a used pairing code, the Nous girl mascot with four ring
   colours and a mouth that animates only while audio plays, and the green,
   yellow, blue status dot. Nothing else is promised on stage.
+
+---
+
+Back to [docs/README.md](README.md).

@@ -1,5 +1,9 @@
 # Hail Hermes — plugin-first design (agreed)
 
+_The agreed plugin-first design, its trade-offs, and the build order behind 1.0.0._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 Owner's brief (2026-11-07): the **plugin is the product** — "the brains of the watch"; very
 customizable; the watch is first-class and can change plugin settings itself; install must be
 effortless; **any** model works (Hermes subscription, local LM Studio/Ollama/vLLM, free hosted)
@@ -99,3 +103,7 @@ app, and the catalog PR / public repo until the owner decides.
 
 Never give up reconnecting (measured 4 s recovery) · one hub per state directory · a wedged
 Speaking/Thinking state escapes itself · pairing refuses expired, replayed and disconnected approvals.
+
+---
+
+Back to [docs/README.md](README.md).

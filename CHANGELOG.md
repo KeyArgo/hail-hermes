@@ -39,7 +39,7 @@ shown **in the pane header** and at `GET /v1/version`. The status bar carries on
 - The build stamp moved from a second status-bar item into the **pane header** (and the Settings
   line). `PANE_VERSION` / `PANE_BUILD` remain as fallbacks; the chip itself reads `/v1/version`, so a
   stale constant cannot advertise a build the backend is not running.
-- **One release number**: `1.1.0` in `plugin.yaml`, `plugin/plugin.yaml`, the package manifest,
+- **One release number**: `1.0.0` in `plugin.yaml`, `plugin/plugin.yaml`, the package manifest,
   `pyproject.toml`, `__version__` and `PANE_VERSION`. The parallel `0.2.0` release line was
   withdrawn — a number below the `v1.0.0` tag cannot be the next release.
 - `test_the_three_manifests_tell_one_story` fails when the three manifests disagree, and

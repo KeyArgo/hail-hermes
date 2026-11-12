@@ -1,5 +1,9 @@
 # When the watch says something failed
 
+_What each failure message means and the shortest path back to a working turn._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 All of these start the same way: look at the last few lines of the turn log, which records one
 JSON line per question and answer.
 
@@ -56,3 +60,7 @@ hermes hail restart
 ```
 
 Revoking means pairing again, which is a 4-digit code and one approval.
+
+---
+
+Back to [docs/README.md](README.md).

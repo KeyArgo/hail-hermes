@@ -1,5 +1,9 @@
 # Testing on the watch
 
+_How to build the watch app and run the on-hardware checks._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 Branch: `lane/test-watch`. It has the full panel, heartbeat, setup check and screen-off audio. The watch app in this branch has not been compiled yet.
 
 ## On the computer
@@ -29,3 +33,7 @@ The hub and Hermes Desktop must be on the same Wi-Fi as the watch. Restart Herme
 7. Sessions tab: Open in Hermes.
 
 For each one, say what you saw. A screenshot or a short note is plenty.
+
+---
+
+Back to [docs/README.md](README.md).

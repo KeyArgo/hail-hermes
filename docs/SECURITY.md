@@ -1,5 +1,9 @@
 # Security model
 
+_How pairing, tokens, the network surface and the watch's permissions work._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 Short, because the surface is small: one machine, one hub, devices the owner paired.
 
 ## Pairing
@@ -7,7 +11,7 @@ Short, because the surface is small: one machine, one hub, devices the owner pai
 A device is let in only when a person approves it.
 
 1. The watch asks to pair and shows a **four-digit match code** on its own screen.
-2. The hub holds the request for `pair_timeout` seconds (default 120) and shows the same code
+2. The hub holds the request for `pair_timeout` seconds (default 300) and shows the same code
    in the pane's Watch tab or via `hermes hail pair list`.
 3. The owner approves **on the computer**, over the loopback control channel, protected by a
    token in the state directory.
@@ -50,3 +54,7 @@ failed on every turn.
 - The model provider: what you say to the watch goes to whichever provider is configured.
 - Denial of service: a device on the LAN can ask to pair repeatedly. It will never be approved,
   but it can make the pane noisy until the pending cap kicks in.
+
+---
+
+Back to [docs/README.md](README.md).

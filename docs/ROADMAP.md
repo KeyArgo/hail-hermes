@@ -1,5 +1,9 @@
 # Roadmap — where new ideas go
 
+_Every raised idea, with a plain verdict before anyone builds it._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 Every idea the owner raises lands here with a plain verdict before anyone builds it.
 **Possible** means it can be built with the tooling we already have. **Possible with a
 catch** means the catch is written out. **Not possible** means it cannot be done that
@@ -67,3 +71,7 @@ closes it with 4000 every time. Either port it to v2 or drop it from the submiss
 1. New idea → one row here, with a verdict, before code.
 2. A row is only "done" when something real proves it (a test, a screenshot, a run).
 3. If the verdict is "possible with a catch", the catch is the first thing written down.
+
+---
+
+Back to [docs/README.md](README.md).

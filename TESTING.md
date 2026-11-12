@@ -1,18 +1,11 @@
-# Testing this plugin on another machine
+# Testing
+
+_How to run every suite, what each one covers, and the exact results measured at this commit._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
 
 Two ways in: run the script, or hand this file to an agent on that machine and let it follow the
 steps. Both end with a `RESULT.txt` you can send back.
-
-## One command (Windows)
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\test-windows.ps1
-```
-
-It creates `.venv-win`, installs the declared dependencies plus pytest, finds every `tests` directory
-in the repo, runs each one, and writes `RESULT.txt`. It touches nothing outside this folder.
-
-Prerequisite: Python 3.12 from python.org, installed with **"Add python.exe to PATH"** ticked.
 
 ## One command (Linux / macOS)
 
@@ -20,16 +13,59 @@ Prerequisite: Python 3.12 from python.org, installed with **"Add python.exe to P
 bash scripts/test.sh
 ```
 
+## One command (Windows)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\test-windows.ps1
+```
+
+It creates `.venv-win`, installs the declared dependencies plus pytest, finds every `tests`
+directory in the repo, runs each one, and writes `RESULT.txt`. It touches nothing outside this
+folder. Prerequisite: Python 3.12 from python.org, installed with **"Add python.exe to PATH"**
+ticked.
+
+## Suites
+
+| Suite | Command | What it covers |
+|---|---|---|
+| Plugin | `python -m pytest plugin/tests -q` | Protocol, pairing, hub turns, tools, settings, speech backends, the pane bundle, version identity |
+| Simulator | `python -m pytest simulator/tests -q` | Device/hub protocol behaviour with no hardware |
+| Face generator | `python -m pytest tools/facesmith/tests -q` | Frame generation, transitions and geometry |
+| Wear OS | `cd wear && ./gradlew :app:assembleDebug :app:testDebugUnitTest` | Kotlin codecs, connection policy, playback, transcript state, gestures |
+| Phone | `cd android && ./gradlew :app:assembleDebug :app:testDebugUnitTest` | Kotlin codec tests (protocol v1; not the 1.0.0 watch path) |
+
+The Python suites do not need a watch, a microphone or a model. The Kotlin suites need JDK 17 and
+Android SDK 35.
+
 ## Recorded results
 
 | Host | OS | Python | Commit | Suites | Exit |
 |---|---|---|---|---|---|
-| Linux workstation | Linux 7.1.2 x86_64 | 3.14.9 | `ce48e3e` | `373 passed, 1 skipped` · `30 passed` | **0** |
+| Linux workstation | Linux 7.1.2 x86_64 | 3.13.13 | `386a6c8` | `373 passed, 1 skipped` (plugin) · `6 passed` (simulator) · `30 passed` (facesmith) | **0** |
 | Windows | — | — | — | **not yet measured** | — |
 
-Linux was measured on 2026-11-10 from a *deleted* virtual environment, so the run proves a fresh
-machine can install and execute the suites. Windows has a script but no result; the difference
-between those two states is the whole point of this file.
+**Total: 409 passed, 1 skipped.** The badge at the top of the README uses the passed count.
+
+The Kotlin/Gradle suites were **not run on the Linux workstation used for this record** because it
+has no JDK compiler installed (`java` is present but `javac` is not). CI runs them in
+`.github/workflows/wear.yml` and `.github/workflows/android.yml` with JDK 17 and the runner's
+Android SDK. A local result for them is still wanted; the commands above are the same ones CI runs.
+
+The earlier record (`ce48e3e`, `373 passed, 1 skipped` across plugin + simulator) was measured from
+a *deleted* virtual environment, so it proved a fresh machine could install and execute the suites.
+This run repeats that property: `scripts/test.sh` creates its virtual environment outside the repo.
+
+## What CI runs
+
+| Workflow | Trigger | Command |
+|---|---|---|
+| `wear.yml` | changes under `wear/**` | `./gradlew :app:assembleDebug :app:testDebugUnitTest` |
+| `android.yml` | changes under `android/**` | the same command in `android/` |
+
+Both workflows use `actions/setup-java@v4` (Temurin 17) and `gradle/actions/setup-gradle@v4`. They
+deliberately do **not** use `android-actions/setup-android@v3`, which currently fails on a
+preview-license prompt; the Ubuntu runner ships the Android SDK. There is no Python CI workflow in
+this repo at 1.0.0, so the Python counts above are local measurements recorded here.
 
 ## What the scripts install, and why that matters
 
@@ -70,3 +106,7 @@ you did not see.
 
 The scoring system reads a recorded suite result at a commit as proof the code runs. A Windows result
 is the evidence that turns "Windows untested" into a measured fact.
+
+---
+
+Back to [docs/README.md](docs/README.md).

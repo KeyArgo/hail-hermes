@@ -1,5 +1,9 @@
 # Hail Hermes — 60-second watch test checklist
 
+_Six on-watch checks, ticked in about a minute._
+
+Applies to Hail Hermes 1.0.0 · revised 2026-11-11
+
 Do the six checks in order, on the physical watch. Tick PASS or write down what you saw. Total time about one minute.
 
 **1. Rain answer without waking the agent**
@@ -37,3 +41,7 @@ If this fails, note: how long it actually took, and whether you had to reopen th
 - If **1** passed but **2** did not, the weather path is fine and the model hot-swap is the problem.
 - If **6** failed, nothing else matters yet: connection recovery is the judged criterion.
 - Anything that needed the app closed and reopened is a defect, not a quirk. Write down which step.
+
+---
+
+Back to [docs/README.md](README.md).
