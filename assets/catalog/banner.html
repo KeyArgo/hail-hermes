@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  html, body { width: 1200px; height: 600px; margin: 0; }
+  body {
+    font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+    background:
+      radial-gradient(900px 500px at 88% 38%, rgba(34, 211, 238, 0.18), transparent 62%),
+      radial-gradient(700px 420px at 8% 92%, rgba(124, 58, 237, 0.20), transparent 60%),
+      linear-gradient(135deg, #080b10 0%, #0d1420 52%, #0a1018 100%);
+    color: #e8eef7;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .grain {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: 4px 4px;
+    opacity: 0.35;
+  }
+  .left { padding: 0 0 0 78px; width: 700px; position: relative; z-index: 2; }
+  .eyebrow {
+    font-size: 15px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: #8ea3bd; font-weight: 600; margin-bottom: 22px;
+  }
+  h1 { font-size: 86px; line-height: 0.95; letter-spacing: -0.035em; margin: 0 0 24px; font-weight: 800; }
+  h1 span { color: #5eead4; }
+  .tagline { font-size: 28px; line-height: 1.28; color: #cddbeb; margin: 0 0 30px; max-width: 620px; }
+  .meta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    background: rgba(15, 23, 42, 0.55);
+    color: #b9cbe0; border-radius: 999px; padding: 8px 14px;
+  }
+  .right { position: relative; z-index: 2; margin-left: auto; margin-right: 78px; width: 360px; }
+  .watch {
+    width: 360px; height: 360px; border-radius: 50%;
+    object-fit: cover; display: block;
+    border: 10px solid #1b2634;
+    box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.35), 0 34px 90px rgba(0,0,0,0.62), 0 0 90px rgba(34,211,238,0.22);
+  }
+  .glow {
+    position: absolute; inset: -60px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(94,234,212,0.18), transparent 66%);
+    z-index: -1;
+  }
+  .caption { text-align: center; margin-top: 18px; color: #93a8c1; font-size: 15px; letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="left">
+    <div class="eyebrow">Hermes Agent plugin</div>
+    <h1>Hail <span>Hermes</span></h1>
+    <p class="tagline">Talk to your Hermes agent out loud — in the desktop panel, or from a watch it pairs with in four digits.</p>
+    <div class="meta">
+      <div class="pill">Desktop panel needs no hardware</div>
+      <div class="pill">Wear OS watch</div>
+      <div class="pill">409 tests passing · MIT</div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="glow"></div>
+    <img class="watch" src="../screenshots/watch-speaking.png" alt="Hail Hermes answering out loud on a Galaxy Watch">
+    <div class="caption">The reply is spoken; the face moves only while audio plays.</div>
+  </div>
+</body>
+</html>

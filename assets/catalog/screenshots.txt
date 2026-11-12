@@ -1,0 +1,2 @@
+assets/screenshots/watch-speaking.png
+assets/screenshots/watch-ready.png
