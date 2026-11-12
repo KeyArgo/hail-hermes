@@ -1,0 +1,43 @@
+name: release
+# A pushed vX.Y.Z tag becomes a GitHub release only if release_check agrees, and its notes are the
+# CHANGELOG section for exactly that version. Every push also runs the cheap checks.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: version, changelog and mirrors agree
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: python3 tools/release_check.py
+      - name: this tag is a real release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python3 tools/release_check.py --release
+          test "v$(grep -m1 '^version:' plugin.yaml | cut -d: -f2 | tr -d ' \"')" = "${GITHUB_REF_NAME}"
+      - name: publish the release from the CHANGELOG
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/release_check.py --notes > notes.md
+          product="$(grep -m1 -E '^(label|title):' plugin.yaml | cut -d: -f2- | tr -d '"' | xargs)"
+          name="${product:-${GITHUB_REPOSITORY#*/}} ${GITHUB_REF_NAME#v}"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --title "$name" --notes-file notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --title "$name" --notes-file notes.md --latest
+          fi

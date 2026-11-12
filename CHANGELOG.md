@@ -4,7 +4,29 @@ Versions follow the suite's `VERSIONING-STANDARD.md`: `plugin.yaml` names the re
 each build carries its real identity (version · commit · date · dirty) from `version_stamp.py`,
 shown **in the pane header** and at `GET /v1/version`. The status bar carries only the ⌚ chip.
 
-## [1.0.0] — unreleased
+## Unreleased
+
+- **A catalog install no longer reads `-dev`.** The version chip treated any untagged checkout as a development build, and a catalog install carries no tags.
+- **The pane stub tool registers the plugin the way the test harness does.**
+- **The version chip tells a release from a development build.** A catalog install of the pinned commit, or a checkout at the release tag, reads `X.Y.Z`; any other build reads `X.Y.Z-dev`. `tools/release_check.py` and the release workflow keep the version, the changelog, the tag and the GitHub release in step.
+- **Documentation:** a rebuilt README with a recorded demo and current Hermes Desktop screenshots, and a full docs set (usage, reference, architecture, configuration, troubleshooting, FAQ, development and testing).
+- **Project files:** contributing guide, code of conduct, security policy, issue and pull request templates, and CODEOWNERS.
+
+## 1.0.0 — 2026-11-11
+
+First public release.
+
+- **Hold to talk, hear the answer.** Replies are spoken, and the face moves only while audio is really playing.
+- **A 60-second demo in the panel:** three real questions answered aloud through the real hub, no watch needed.
+- **Pair a watch in four digits.** It finds this computer on the same Wi-Fi and reconnects by itself after the hub restarts or the network drops.
+- **The agent starts the conversation.** Scheduled nudges reach you on the panel or your wrist.
+- **Any model, including local ones.** Hermes subscription, LM Studio, Ollama or vLLM, switched live; the panel header says which one is answering.
+- **Device tools for the agent** while a watch is connected: notify, say, haptic and battery.
+- **Weather and day briefs** answered in seconds without a model round trip.
+
+## Development history (before 1.0.0)
+
+The notes below were written during development, before the first public release.
 
 ### A destination in the app
 - **A left-rail entry.** `SIDEBAR_NAV_AREA` gives Hail Hermes a place in Hermes Desktop's own sidebar,

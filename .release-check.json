@@ -1,0 +1,3 @@
+{
+  "mirrors": ["plugin/plugin.yaml", "plugin/hail_hermes/plugin.yaml", "plugin/hail_hermes/__init__.py"]
+}
