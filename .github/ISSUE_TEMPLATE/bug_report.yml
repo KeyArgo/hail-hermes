@@ -1,0 +1,54 @@
+name: Bug report
+description: Something did not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include tokens, credentials, private conversation text or personal paths.
+        Security problems go through private vulnerability reporting, not this form.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The pane header, `hermes hail --help`, or `GET /v1/version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did it happen?
+      options:
+        - Desktop panel
+        - Wear OS watch
+        - Phone client (android/)
+        - CLI / hub
+        - MCP / agent tools
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The shortest sequence that reproduces it.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Include the last lines of `hub.log` or `turns.jsonl` if relevant. Remove private data first.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python, Hermes version, watch model, backend.

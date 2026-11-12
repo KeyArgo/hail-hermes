@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and show-and-tell
+    url: https://github.com/KeyArgo/hail-hermes/discussions
+    about: Ask a question or share a setup.
+  - name: Security report
+    url: https://github.com/KeyArgo/hail-hermes/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.
+  - name: Read the documentation
+    url: https://github.com/KeyArgo/hail-hermes/blob/main/docs/README.md
+    about: Install, usage, configuration, troubleshooting and the protocol.
