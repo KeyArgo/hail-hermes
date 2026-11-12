@@ -39,10 +39,9 @@ pair later.
 - **A weather fast path** that answers "will it rain?" in about three seconds without a model round
   trip.
 - **Built to be checked, not believed.** 409 tests passed in the recorded suites (plugin, simulator,
-  face generator; 1 skipped), a simulator that needs no hardware, a headless harness that clicks
-  every control, and a static-analysis gate that fails the build on new findings. The panel header
-  names the build it is running, read from the hub itself — so the number you see is the number that
-  answers.
+  face generator; 1 skipped), a simulator that needs no hardware, and a headless harness that clicks
+  through the panel. The panel header names the build it is running, read from the hub itself — so
+  the number you see is the number that answers.
 
 ## Features
 

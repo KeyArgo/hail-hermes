@@ -55,8 +55,6 @@ shown **in the pane header** and at `GET /v1/version`. The status bar carries on
 - **Test virtualenvs live outside the repo** (`${TMPDIR:-/tmp}/hail-hermes-venv-test`): one inside the
   tree was copied into the installed plugin and blocked the next deploy with "links are not followed
   into an update".
-- **The static gate excludes the duplicated bundle** with the reason beside it, so the copy cannot
-  double every finding; `aislop ci` is exit 0 with 0 new findings.
 - Swallow-and-continue sites in the brief and TTS-cache paths log at debug instead of passing silently.
 
 ### Earlier in 1.0.0
@@ -77,10 +75,5 @@ shown **in the pane header** and at `GET /v1/version`. The status bar carries on
 - `edge-tts` is declared as the optional extra `tts`, next to its guarded lazy import.
 - Removed dead wrist-pane state (`matchCode`, `micRef`) and a `/soul` fetch whose result was
   discarded on the Character tab; `hub.py` no longer imports two names it never used.
-- **A static-analysis gate that means something.** `.aislop/config.yml` declares the packages the
-  Hermes host supplies (so 27 phantom "hallucinated imports" stop being findings) and keeps the
-  dev harness out of the scan; `.aislop/ci-baseline.json` records the debt we accept, so
-  `aislop ci` fails on new findings only. Requires `ruff` on PATH — without it the Python half of
-  the scan never runs and the score is fiction.
-- Dead imports found by the new gate: `os` in `cli.py`, the two voice ids in `plugin_api.py`.
+- Dead imports removed: `os` in `cli.py`, the two voice ids in `plugin_api.py`.
   `scripts/verify-served.py` is executable now that it has a shebang.
