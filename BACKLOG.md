@@ -7,4 +7,6 @@
 the first CI run) and never locally (40/40, also under load and with websockets 15.0.1). The handoff
 test sends `interrupt` and releases the background result back to back; when they arrive in the
 other order the hub never sends a final `state: idle`. A user who interrupts the moment a background
-answer lands could see the same stall. Both tests skip only when `CI=true` until this is fixed.
+answer lands could see the same stall. `::test_set_mode_session_uses_resume_id_and_bad_session` stalls the same way on macOS runners
+(hub plus `QuickAgent` against the local SSE server). All three skip only when `CI=true` until
+this is fixed; the common factor is the quick-agent path, so look there first.
