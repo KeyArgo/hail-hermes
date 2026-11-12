@@ -4,16 +4,7 @@ Versions follow the suite's `VERSIONING-STANDARD.md`: `plugin.yaml` names the re
 each build carries its real identity (version · commit · date · dirty) from `version_stamp.py`,
 shown **in the pane header** and at `GET /v1/version`. The status bar carries only the ⌚ chip.
 
-## Unreleased
-
-- **Windows: a retried pairing code is explained correctly.** Two attempts inside one ~15 ms clock tick shared a timestamp, so typing the older code said the watch had left instead of naming the newer code. Attempts now carry an arrival number.
-- **A catalog install no longer reads `-dev`.** The version chip treated any untagged checkout as a development build, and a catalog install carries no tags.
-- **The pane stub tool registers the plugin the way the test harness does.**
-- **The version chip tells a release from a development build.** A catalog install of the pinned commit, or a checkout at the release tag, reads `X.Y.Z`; any other build reads `X.Y.Z-dev`. `tools/release_check.py` and the release workflow keep the version, the changelog, the tag and the GitHub release in step.
-- **Documentation:** a rebuilt README with a recorded demo and current Hermes Desktop screenshots, and a full docs set (usage, reference, architecture, configuration, troubleshooting, FAQ, development and testing).
-- **Project files:** contributing guide, code of conduct, security policy, issue and pull request templates, and CODEOWNERS.
-
-## 1.0.0 — 2026-11-11
+## 1.0.0 — in catalog review
 
 First public release.
 
@@ -24,6 +15,17 @@ First public release.
 - **Any model, including local ones.** Hermes subscription, LM Studio, Ollama or vLLM, switched live; the panel header says which one is answering.
 - **Device tools for the agent** while a watch is connected: notify, say, haptic and battery.
 - **Weather and day briefs** answered in seconds without a model round trip.
+
+### After the hackathon submission
+
+The hackathon entry pins commit `65bf0ba` ([NousResearch/hermes-agent#154028](https://github.com/NousResearch/hermes-agent/pull/154028), tag `hackathon-submission`). 1.0.0 is the commit the catalog accepts; these changes came after the submission:
+
+- **Windows: a retried pairing code is explained correctly.** Two attempts inside one ~15 ms clock tick shared a timestamp, so typing the older code said the watch had left instead of naming the newer code. Attempts now carry an arrival number.
+- **A catalog install reads the release, not `-dev`.** The version chip treated any untagged checkout as a development build, and a catalog install carries no tags.
+- **The pane stub tool registers the plugin the way the test harness does.**
+- **The version chip tells a release from a development build.** A catalog install of the pinned commit, or a checkout at the release tag, reads `X.Y.Z`; any other build reads `X.Y.Z-dev`. `tools/release_check.py` and the release workflow keep the version, the changelog, the tag and the GitHub release in step.
+- **Documentation:** a rebuilt README with a recorded demo and current Hermes Desktop screenshots, and a full docs set (usage, reference, architecture, configuration, troubleshooting, FAQ, development and testing).
+- **Project files:** contributing guide, code of conduct, security policy, issue and pull request templates, and CODEOWNERS.
 
 ## Development history (before 1.0.0)
 

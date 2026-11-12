@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/KeyArgo/hail-hermes/actions/workflows/tests.yml"><img alt="CI" src="https://github.com/KeyArgo/hail-hermes/actions/workflows/tests.yml/badge.svg?branch=main"></a>
   <a href="TESTING.md"><img alt="409 tests passing" src="https://img.shields.io/badge/tests-409%20passing-2ea44f?style=flat-square"></a>
-  <a href="https://github.com/KeyArgo/hail-hermes/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/KeyArgo/hail-hermes?style=flat-square&color=2f6bff"></a>
+  <a href="https://github.com/NousResearch/hermes-agent/pull/154028"><img alt="Hermes plugin catalog: in review" src="https://img.shields.io/badge/plugin%20catalog-in%20review-f59e0b?style=flat-square"></a>
   <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/license-MIT-2f6bff?style=flat-square"></a>
   <a href="https://github.com/NousResearch/hermes-agent"><img alt="Hermes Agent plugin" src="https://img.shields.io/badge/Hermes%20Agent-plugin-7c3aed?style=flat-square"></a>
   <img alt="Hermes Desktop and Wear OS" src="https://img.shields.io/badge/platform-Hermes%20Desktop%20%C2%B7%20Wear%20OS-555?style=flat-square">

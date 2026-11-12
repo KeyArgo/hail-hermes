@@ -44,13 +44,21 @@ the pane is the same agent and the same voice.
 The watch app is a separate Android app; the plugin only contains the computer half, and no plugin can
 install a second Android app on your behalf.
 
-Download it: **https://github.com/KeyArgo/hail-hermes/releases/latest** (`hail-wear-*.apk`).
+Get it either way:
+
+- **Prebuilt:** each GitHub release carries `hail-wear-<version>.apk`. The first release, 1.0.0, is
+  published when the Hermes plugin catalog accepts this plugin.
+- **Build it yourself** (JDK 17 and the Android SDK):
+
+  ```bash
+  cd wear && ./gradlew :app:assembleDebug   # wear/app/build/outputs/apk/debug/app-debug.apk
+  ```
 
 Installing it needs adb with wireless debugging on the watch — there is no Play Store listing yet:
 
 ```bash
 adb connect <watch-ip>:<port>        # the port is shown in the watch's developer options
-adb install -r hail-wear-tonight.apk
+adb install -r app-debug.apk         # or hail-wear-<version>.apk from a release
 ```
 
 Then, with the app on the watch:
