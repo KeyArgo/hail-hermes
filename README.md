@@ -5,7 +5,7 @@
 <p align="center"><em>Talk to your Hermes agent out loud — in the desktop panel, or from a watch it pairs with in four digits.</em></p>
 
 <p align="center">
-  <a href="https://github.com/KeyArgo/hail-hermes/actions/workflows/wear.yml"><img alt="CI" src="https://github.com/KeyArgo/hail-hermes/actions/workflows/wear.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/KeyArgo/hail-hermes/actions/workflows/tests.yml"><img alt="CI" src="https://github.com/KeyArgo/hail-hermes/actions/workflows/tests.yml/badge.svg?branch=main"></a>
   <a href="TESTING.md"><img alt="409 tests passing" src="https://img.shields.io/badge/tests-409%20passing-2ea44f?style=flat-square"></a>
   <a href="https://github.com/KeyArgo/hail-hermes/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/KeyArgo/hail-hermes?style=flat-square&color=2f6bff"></a>
   <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/license-MIT-2f6bff?style=flat-square"></a>

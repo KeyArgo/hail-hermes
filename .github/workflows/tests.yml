@@ -1,0 +1,40 @@
+name: tests
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e "plugin[test]"
+          for proj in simulator tools/facesmith; do
+            for f in requirements.txt requirements-dev.txt; do
+              if [ -f "$proj/$f" ]; then python -m pip install -r "$proj/$f"; fi
+            done
+            if [ -f "$proj/pyproject.toml" ]; then python -m pip install -e "$proj"; fi
+          done
+      - name: Test (plugin, simulator, face generator)
+        shell: bash
+        run: |
+          status=0
+          for suite in plugin/tests simulator/tests tools/facesmith/tests; do
+            echo "::group::$suite"
+            python -m pytest "$suite" -o addopts="" -q -p no:cacheprovider || status=1
+            echo "::endgroup::"
+          done
+          exit $status

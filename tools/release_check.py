@@ -112,6 +112,18 @@ def check(release: bool) -> list[str]:
         version_tags = [t for t in head_tags if re.match(r"^v\d+\.\d+\.\d+", t)]
         if version_tags and f"v{version}" not in version_tags:
             errors.append(f"HEAD is tagged {version_tags} but plugin.yaml says {version}")
+        stale = []
+        for rel in git("ls-files", "*.md").splitlines():
+            if rel == "CHANGELOG.md" or rel.startswith(("docs/history/", "third_party/", "vendor/")):
+                continue
+            for line in (ROOT / rel).read_text(encoding="utf-8", errors="replace").splitlines():
+                if "Applies to" in line:
+                    found = re.findall(r"\b(\d+\.\d+\.\d+)\b", line)
+                    if found and version not in found:
+                        stale.append(f"{rel} ({found[0]})")
+                    break
+        if stale:
+            errors.append(f"docs still say they apply to another version: {', '.join(stale[:8])}")
         if git("status", "--porcelain", "--untracked-files=no"):
             errors.append("the working tree has uncommitted changes")
     elif tagged and head and tagged != head:
