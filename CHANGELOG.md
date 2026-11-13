@@ -69,6 +69,32 @@ The notes below were written during development, before the first public release
   the configured sources and Hermes' own model list are empty), "Still waiting — check the hub."
   after ten seconds, and the existing hub-unreachable row with Retry.
 
+### Quality review (2026-11-13): what the fixes broke, and the five that were still wrong
+
+- **"Remember …" means what the mode says.** In a session the sentence now reaches the agent, whose memory
+  toolset owns `MEMORY.md` with its entry format, budget and safety scan; before, the hub swallowed it in
+  every mode and wrote a file only quick mode read. Quick mode keeps the local fact because it has no agent
+  to hand it to.
+- **Quick mode reads Hermes' memory again, read-only.** The upgrade that stopped *writing* `MEMORY.md` also
+  stopped *reading* it, so a first quick answer after upgrading knew nothing the owner had told Hermes. The
+  prompt includes it before the plugin's own facts; the file is never opened for writing, and the obsolete
+  `memory_path` setting is gone from the docs.
+- **The facts file survives concurrent writers.** The trim ran outside the lock and rewrote from a second
+  handle, so at the 200-fact limit an append could be silently dropped. Read, append and trim are one
+  locked operation now.
+- **The origin check accepts a list, not a wildcard.** It used to allow every scheme it did not recognise
+  (`file://`, `data:`, `blob:`, `chrome-extension:`, anything). A loopback http(s) page with a port, the
+  desktop's `file://` renderer and no Origin at all are accepted; everything else gets a 403.
+- **The pane calls them facts for quick ask.** "5. Memory (MEMORY.md)" led people to think their additions
+  reached the agent's memory; the section says what it is and which mode reads it, and the pane harness now
+  runs in CI so a claim like that is rendered rather than grepped.
+- **The deploy asks the hub instead of counting device lines.** `hermes hail devices` lists devices: two
+  watches failed the check, a crashed hub with none passed it. `tools/hub-health.py` waits for `/status` to
+  say running, and a failed restart stops the deploy.
+- **Windows: the fake TTS worker is ASCII and written as UTF-8.** The test harness wrote its worker with the
+  platform default encoding (cp1252 on Windows) and the source contained an em dash, so the child died with
+  a SyntaxError before answering — which looked exactly like a broken voice backend.
+
 ### Models are findable and ordered
 - **The Brain list is searchable**: a filter box over a clickable list, matching provider and model
   name, with an honest empty state and a `(saved)` row when the live list has not caught up.
