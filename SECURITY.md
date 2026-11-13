@@ -39,3 +39,15 @@ most:
 
 Out of scope: the security of the Hermes host itself, the model provider you configure, and a
 machine where an attacker already has a shell.
+
+## What the plugin does with your machine
+
+- **No credential file is read.** Model discovery uses the configured default, local endpoints and the
+  model names Hermes has cached; a listed name is visible, not proven usable.
+- **Child processes inherit almost nothing.** The speech workers, ffmpeg, `command` backends and `adb`
+  are spawned with an allowlisted environment (PATH, HOME, LANG, TMPDIR, LD_LIBRARY_PATH,
+  `POCKET_TTS_*`, and on Windows `SYSTEMROOT`), so API keys in the Hermes process are not passed on.
+- **No wildcard CORS.** The hub's `/status` route sends no `Access-Control-Allow-Origin` header, and a
+  device origin of `null` (a sandboxed frame or `file://` page) is refused.
+- **Your agent's `MEMORY.md` is never written.** Facts you ask the plugin to remember live in its own
+  state directory; the agent's memory changes only through the agent.

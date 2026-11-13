@@ -12,7 +12,8 @@ from pathlib import Path
 from conftest import Client, FakeAgent, is_type, running_hub
 from hail_hermes import filelock
 from hail_hermes.hub import match_slot
-from hail_hermes.quick import QuickAgent, append_memory, resolve_memory_path
+from hail_hermes.facts import append_fact, facts_path, read_facts
+from hail_hermes.quick import QuickAgent
 from hail_hermes.settings import read_settings, update_settings
 
 
@@ -164,25 +165,13 @@ async def test_new_session_called_and_lazy_slot_creation(state_dir):
             assert agent.calls[1]["new_session"] is False
 
 
-async def test_remember_voice_command_and_memory_append_lock(state_dir, tmp_path, monkeypatch):
-    mem_file = tmp_path / "profiles" / "work" / "memories" / "MEMORY.md"
-    mem_file.parent.mkdir(parents=True, exist_ok=True)
+async def test_remember_writes_the_plugins_own_file_and_never_core_memory(state_dir, tmp_path, monkeypatch):
+    """Review item 3: `remember …` must not append to Hermes' MEMORY.md."""
+    core_memory = tmp_path / "profiles" / "work" / "memories" / "MEMORY.md"
+    core_memory.parent.mkdir(parents=True, exist_ok=True)
     initial = "# Existing Memories\n- Initial entry\n"
-    mem_file.write_text(initial, encoding="utf-8")
-    initial_ino = mem_file.stat().st_ino
-
+    core_memory.write_text(initial, encoding="utf-8")
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "profiles" / "work"))
-    assert resolve_memory_path(state_dir) == mem_file
-
-    lock_calls: list[tuple[int, int]] = []
-    real_lock = filelock.lock
-
-    def tracked_lock(target):
-        fd = target if isinstance(target, int) else target.fileno()
-        lock_calls.append((fd, 1))
-        return real_lock(target)
-
-    monkeypatch.setattr(filelock, "lock", tracked_lock)
 
     agent = FakeAgent()
     async with running_hub(state_dir, agent=agent) as hub:
@@ -192,46 +181,35 @@ async def test_remember_voice_command_and_memory_append_lock(state_dir, tmp_path
             msgs = await c.until(is_type("state", screen="idle"))
             assist = [m for m in msgs if isinstance(m, dict) and m.get("type") == "transcript" and m.get("role") == "assistant"]
             assert assist[-1]["text"] == "Got it, I'll remember that."
-            assert not agent.calls
+            assert not agent.calls, "a remembered fact is stored locally; it must not spend a model turn"
 
-            long_fact = "x" * 450
-            await c.send("text", text=f"Remember {long_fact}")
+            await c.send("text", text=f"Remember {'x' * 450}")
             await c.until(is_type("state", screen="idle"))
 
-    # File was appended in place (same inode, existing content preserved, 300-char cap)
-    assert mem_file.stat().st_ino == initial_ino
-    assert lock_calls
-    content = mem_file.read_text(encoding="utf-8")
-    assert content.startswith(initial)
-    lines = content.strip().splitlines()
-    assert lines[2] == "- I prefer dark mode"
-    assert lines[3] == f"- {'x' * 300}"
+    # Core's file is byte-identical: the plugin never opened it for writing.
+    assert core_memory.read_text(encoding="utf-8") == initial
+
+    # The fact lives in the plugin's own file, capped at 300 characters.
+    facts = read_facts(state_dir)
+    assert facts == ["I prefer dark mode", "x" * 300]
 
 
-def test_quick_agent_prompt_includes_memories_and_reloads_on_mtime(state_dir, tmp_path):
-    mem_dir = tmp_path / "memories"
-    mem_dir.mkdir(parents=True, exist_ok=True)
-    mem_file = mem_dir / "MEMORY.md"
-    user_file = mem_dir / "USER.md"
+def test_quick_agent_prompt_includes_facts_and_reloads_on_mtime(state_dir, tmp_path):
+    facts = facts_path(state_dir)
+    facts.parent.mkdir(parents=True, exist_ok=True)
     soul_file = state_dir / "soul.md"
 
-    update_settings(state_dir, {"memory_path": str(mem_file)})
-
-    mem_file.write_text("DROP_ME_" + ("M" * 2000), encoding="utf-8")
-    user_file.write_text("USER_PREFIX_" + ("U" * 2000), encoding="utf-8")
+    facts.write_text("- " + ("F" * 2000) + "\n", encoding="utf-8")
 
     qa = QuickAgent("http://127.0.0.1:9/v1", "test-model", soul_path=soul_file, state_dir=state_dir)
     prompt1 = qa.system_prompt
     assert qa._soul_text in prompt1
-    assert ("M" * 2000) in prompt1
-    assert "DROP_ME_" not in prompt1
-    assert ("U" * 2000) in prompt1
-    assert "USER_PREFIX_" not in prompt1
+    assert ("F" * 2000) in prompt1
 
-    # Updating MEMORY.md and advancing its mtime triggers a re-read
-    append_memory("User loves espresso", state_dir=state_dir)
-    st = mem_file.stat()
-    os.utime(mem_file, (st.st_atime, st.st_mtime + 2.0))
+    # A new fact — and a newer mtime — is what makes the next prompt refresh.
+    append_fact("User loves espresso", state_dir)
+    st = facts.stat()
+    os.utime(facts, (st.st_atime, st.st_mtime + 2.0))
 
     prompt2 = qa.system_prompt
     assert "User loves espresso" in prompt2

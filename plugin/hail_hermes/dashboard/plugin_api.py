@@ -59,6 +59,7 @@ from hail_hermes.settings import (
 )
 from hail_hermes.setup_check import run_setup_check
 from hail_hermes.store import Store, atomic_write
+from ..facts import append_fact, facts_path, read_facts
 
 router = APIRouter()
 
@@ -622,62 +623,17 @@ def _resolve_soul_path(state_dir: str | Path | None) -> Path:
     return Store(state_dir).dir / "soul.md"
 
 
-def _resolve_memory_path(state_dir: str | Path | None) -> Path:
-    cfg = read_settings(state_dir)
-    raw = str(cfg.get("memory_path") or "").strip()
-    if raw:
-        return Path(raw).expanduser()
-    try:
-        from hail_hermes import memory as mem_mod  # type: ignore[attr-defined]
-
-        for attr in ("resolve_memory_path", "default_memory_path", "MEMORY_PATH"):
-            fn = getattr(mem_mod, attr, None)
-            if callable(fn):
-                res = fn()
-                if res:
-                    return Path(res).expanduser()
-            elif isinstance(fn, (str, Path)) and str(fn):
-                return Path(fn).expanduser()
-    except Exception:
-        pass
-    return Path(os.environ.get("HERMES_HOME", "~/.hermes")).expanduser() / "memories" / "MEMORY.md"
+def _memory_file(state_dir: str | Path | None) -> Path:
+    """The plugin's own facts file (review item 3) — never core's ``MEMORY.md``."""
+    if state_dir is None:
+        state_dir = _resolve_state_dir()
+    return facts_path(state_dir)
 
 
-def _append_memory_with_lock(path: Path, fact: str) -> None:
-    clean = fact.strip()
-    if not clean:
-        raise ValueError("memory fact must be non-empty")
-    try:
-        from hail_hermes import memory as mem_mod  # type: ignore[attr-defined]
-
-        for attr in ("append_memory", "append_fact", "add_memory"):
-            helper = getattr(mem_mod, attr, None)
-            if callable(helper):
-                helper(clean, path=path)
-                return
-    except TypeError:
-        try:
-            helper(path, clean)  # type: ignore[misc]
-            return
-        except Exception:
-            pass
-    except Exception:
-        pass
-    path.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = path.parent / f".{path.name}.lock"
-    line = clean if clean.startswith("- ") else f"- {clean}"
-    with lock_path.open("a+", encoding="utf-8") as lock_file:
-        filelock.lock(lock_file)
-        try:
-            existing = path.read_text(encoding="utf-8") if path.is_file() else ""
-            prefix = "" if not existing or existing.endswith("\n") else "\n"
-            with path.open("a", encoding="utf-8") as handle:
-                handle.write(f"{prefix}{line}\n")
-                handle.flush()
-                os.fsync(handle.fileno())
-        finally:
-            filelock.unlock(lock_file)
-
+def _read_memory_lines(state_dir: str | Path | None) -> tuple[list[str], Path]:
+    path = _memory_file(state_dir)
+    facts = read_facts(path.parent)
+    return [f"- {fact}" for fact in facts], path
 
 def _fallback_wav_bytes(duration_s: float = 0.15, rate: int = 16000) -> bytes:
     samples = max(1, int(duration_s * rate))
@@ -1131,12 +1087,10 @@ def get_soul_templates() -> dict[str, Any]:
 @router.get("/memory")
 def get_memory() -> dict[str, Any]:
     state_dir = _resolve_state_dir()
-    path = _resolve_memory_path(state_dir)
     try:
-        raw = _run_bounded(path.read_text, encoding="utf-8", timeout=_ROUTE_BUDGET)
-        all_lines = [line for line in str(raw).splitlines()]
+        all_lines, path = _run_bounded(_read_memory_lines, state_dir, timeout=_ROUTE_BUDGET)
     except (FileNotFoundError, OSError, HubUnavailable):
-        all_lines = []
+        all_lines, path = [], _memory_file(state_dir)
     tail = all_lines[-20:]
     return {
         "ok": True,
@@ -1154,9 +1108,8 @@ def post_memory(body: dict[str, Any] | None = None) -> dict[str, Any]:
     if not isinstance(raw_fact, str) or not raw_fact.strip():
         return {"ok": False, "error": "fact must be a non-empty string"}
     state_dir = _resolve_state_dir()
-    path = _resolve_memory_path(state_dir)
     try:
-        _run_bounded(_append_memory_with_lock, path, raw_fact.strip(), timeout=_ROUTE_BUDGET)
+        _run_bounded(append_fact, raw_fact.strip(), state_dir, timeout=_ROUTE_BUDGET)
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
     res = get_memory()

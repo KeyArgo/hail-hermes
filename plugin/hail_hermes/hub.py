@@ -38,7 +38,8 @@ from . import protocol as P
 from . import __version__
 from .agent import AgentBackend, AgentError, DeviceInfo, EchoAgent, list_hermes_sessions
 from .audio import STT, TTS, StubSTT
-from .quick import HANDOFF_MARKER, append_memory, ensure_soul_file
+from .facts import append_fact
+from .quick import HANDOFF_MARKER, ensure_soul_file
 from .settings import (
     add_settings_listener,
     character_info,
@@ -1862,7 +1863,8 @@ class PocketHub:
             fact = rest.strip(" \t\r\n.!?;,\"'")
             fact = " ".join(fact.split())[:300].strip()
             if fact:
-                append_memory(fact, state_dir=self.store.dir)
+                # The plugin's own file, never core's MEMORY.md (review item 3).
+                append_fact(fact, self.store.dir)
                 return "Got it, I'll remember that."
 
         return None

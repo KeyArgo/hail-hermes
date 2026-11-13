@@ -18,6 +18,7 @@ from typing import Any, AsyncIterator, Iterator
 
 from .agent import AgentError, DeviceInfo
 from . import filelock
+from .facts import facts_path
 from .settings import read_settings
 from .store import default_state_dir
 
@@ -117,57 +118,24 @@ def ensure_soul_file(
     return target
 
 
-def resolve_memory_path(
-    state_dir: str | Path | None = None,
-    memory_path: str | Path | None = None,
-) -> Path:
-    """Resolve the active Hermes ``MEMORY.md`` path from settings or ``HERMES_HOME``."""
-    if memory_path:
-        return Path(memory_path).expanduser()
-    configured = str(read_settings(state_dir).get("memory_path") or "").strip()
-    if configured:
-        return Path(configured).expanduser()
-    env_home = os.environ.get("HERMES_HOME", "").strip()
+def _profile_memories_dir(state_dir: str | Path | None) -> Path:
+    """Where core keeps ``USER.md`` for the active profile — read-only for this plugin.
+
+    Resolved the way core resolves it (``HERMES_HOME`` may be a profile name, a profile directory or a
+    ``.hermes`` root) and never written: only the facts file belongs to this plugin (review item 3).
+    """
     base = Path("~/.hermes").expanduser()
+    env_home = os.environ.get("HERMES_HOME", "").strip()
     if not env_home:
-        return base / "profiles" / "default" / "memories" / "MEMORY.md"
+        return base / "profiles" / "default" / "memories"
     if "/" not in env_home and "\\" not in env_home and not env_home.startswith("~"):
-        return base / "profiles" / env_home / "memories" / "MEMORY.md"
+        return base / "profiles" / env_home / "memories"
     p = Path(env_home).expanduser()
     if p.parent.name == "profiles" or (p / "memories").exists():
-        return p / "memories" / "MEMORY.md"
+        return p / "memories"
     if p.name == ".hermes" or (p / "profiles").exists():
-        return p / "profiles" / "default" / "memories" / "MEMORY.md"
-    active = p.name or "default"
-    return base / "profiles" / active / "memories" / "MEMORY.md"
-
-
-def append_memory(
-    fact: str,
-    state_dir: str | Path | None = None,
-    memory_path: str | Path | None = None,
-) -> Path:
-    """Append ``- <fact>`` (capped at 300 chars) to ``MEMORY.md`` under an exclusive lock."""
-    cleaned = " ".join(fact.strip().split())[:MAX_MEMORY_FACT_CHARS].strip()
-    if not cleaned:
-        raise ValueError("memory fact must not be empty")
-    target = resolve_memory_path(state_dir=state_dir, memory_path=memory_path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    with open(target, "a+", encoding="utf-8") as fh:
-        filelock.lock(fh)
-        try:
-            fh.seek(0, os.SEEK_END)
-            size = fh.tell()
-            needs_nl = False
-            if size > 0:
-                fh.seek(size - 1, os.SEEK_SET)
-                needs_nl = fh.read(1) != "\n"
-            prefix = "\n" if needs_nl else ""
-            fh.write(f"{prefix}- {cleaned}\n")
-            fh.flush()
-        finally:
-            filelock.unlock(fh)
-    return target
+        return p / "profiles" / "default" / "memories"
+    return base / "profiles" / (p.name or "default") / "memories"
 
 
 def _close_response(resp: Any) -> None:
@@ -239,7 +207,6 @@ class QuickAgent:
         max_history: int = 12,
         soul_path: str | Path | None = None,
         state_dir: str | Path | None = None,
-        memory_path: str | Path | None = None,
     ):
         self.url = _completions_url(url) if url.strip() else ""
         self.backend = None if self.url else HermesModelBackend()
@@ -248,7 +215,6 @@ class QuickAgent:
         self._rules_prompt = system_prompt
         self._custom_system_prompt: str | None = system_prompt if system_prompt != SYSTEM_PROMPT else None
         self.state_dir: Path | None = Path(state_dir).expanduser() if state_dir else None
-        self.memory_path: Path | None = Path(memory_path).expanduser() if memory_path else None
         self.soul_path: Path | None = ensure_soul_file(soul_path, state_dir=state_dir)
         self._soul_mtime: float | None = None
         self._soul_text: str = ""
@@ -288,8 +254,11 @@ class QuickAgent:
         return None
 
     def _refresh_memories(self) -> None:
-        mem_path = resolve_memory_path(state_dir=self._effective_state_dir(), memory_path=self.memory_path)
-        user_path = mem_path.parent / "USER.md"
+        # Facts this plugin was asked to remember live in its own file (review item 3): core's
+        # MEMORY.md has an entry format, a budget and a safety scan that a direct append bypasses.
+        state = self._effective_state_dir()
+        user_path = _profile_memories_dir(state) / "USER.md"
+        mem_path = facts_path(state) if state is not None else Path("")
         if self._memory_file != mem_path:
             self._memory_file = mem_path
             self._memory_mtime = None
@@ -327,7 +296,7 @@ class QuickAgent:
             parts.append(self._soul_text)
         parts.append(base_rules)
         if self._memory_text:
-            parts.append(f"Memory (MEMORY.md):\n{self._memory_text}")
+            parts.append(f"Facts you were asked to remember:\n{self._memory_text}")
         if self._user_text:
             parts.append(f"User (USER.md):\n{self._user_text}")
         return "\n\n".join(parts)

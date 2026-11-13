@@ -41,7 +41,6 @@ DEFAULTS: dict[str, Any] = {
     "slots": [],
     "stt_threads": os.cpu_count() or 4,
     "soul_path": str(default_state_dir() / "soul.md"),
-    "memory_path": "",
     "stt": "auto",
     "tts": "auto",
     "character": "nous-warm",
