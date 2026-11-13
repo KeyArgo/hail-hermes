@@ -425,6 +425,11 @@ class PocketHub:
         judge watches. These sentences change rarely, so warming them is cheap and makes the first
         answer as fast as the tenth.
         """
+        if self.tts is None:
+            # No speech backend (replies turned off, or it failed to build): there is nothing to warm.
+            # Trying anyway logged a traceback per sentence at every start, which reads like a fault to
+            # anyone who runs with speech off.
+            return
         from . import brief as brief_api
 
         try:
@@ -452,8 +457,10 @@ class PocketHub:
         for sentence in sentences:
             try:
                 await self._synthesize_remembered(sentence, self._character_voice())
-            except Exception:
-                log.info("brief warm-up skipped one sentence", exc_info=True)
+            except Exception as exc:  # noqa: BLE001 - a warm-up must never break the hub
+                # The sentence is still answered on demand; say what happened without a stack, because a
+                # stack here looks like a crash in a log a user is asked to paste.
+                log.info("brief warm-up skipped one sentence: %s", exc)
 
     async def _warm_voice(self) -> None:
         stt = self.stt
