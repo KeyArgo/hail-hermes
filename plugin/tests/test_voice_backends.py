@@ -51,15 +51,30 @@ FAKE_WORKER = textwrap.dedent("""\
     import sys
     import time
 
-    mode = os.environ.get("FAKE_KOKORO_MODE", "sine")
-    pidfile = os.environ.get("FAKE_KOKORO_PIDFILE", "")
+    # argv: <pidfile> <mode> <rate> <seconds> [timeout] — passed by the helpers below, because the
+    # worker is spawned with a minimal environment now (review item 2).
+    argv = sys.argv[1:] + ["", "sine", "24000", "0.25", "5"]
+    mode = argv[1] or "sine"
+    pidfile = argv[0]
+
+
+    def current_mode():
+        # Read per request: a test flips the mode mid-run, and the child no longer inherits our
+        # environment (review item 2), so a small file carries the change.
+        if not pidfile:
+            return mode
+        try:
+            with open(pidfile + ".mode", encoding="utf-8") as handle:
+                return handle.read().strip() or mode
+        except OSError:
+            return mode
     if pidfile:
         with open(pidfile, "a", encoding="utf-8") as handle:
             handle.write(str(os.getpid()) + "\\n")
 
     def sine_pcm():
-        rate = int(os.environ.get("FAKE_KOKORO_RATE", "24000"))
-        seconds = float(os.environ.get("FAKE_KOKORO_SECONDS", "0.25"))
+        rate = int(argv[2] or "24000")
+        seconds = float(argv[3] or "0.25")
         count = int(seconds * rate)
         samples = array.array("h", (
             int(16000 * math.sin(2 * math.pi * 440 * i / rate))
@@ -83,6 +98,7 @@ FAKE_WORKER = textwrap.dedent("""\
         if not raw:
             break
         request = json.loads(raw)
+        mode = current_mode()
         if mode == "hang":
             time.sleep(3600)
         text = request.get("text") or ""
@@ -168,15 +184,31 @@ async def _transcribe_when_free(stt: HermesSTT, pcm: bytes) -> str:
             await asyncio.sleep(0.01)
 
 
+def _worker_argv(script, pidfile, env):
+    """Knobs travel as arguments: the child's environment is an allowlist (review item 2)."""
+    return [
+        sys._base_executable, "-u", str(script),
+        str(pidfile),
+        str(env.get("FAKE_KOKORO_MODE", "sine")),
+        str(env.get("FAKE_KOKORO_RATE", "24000")),
+        str(env.get("FAKE_KOKORO_SECONDS", "0.25")),
+        str(env.get("TIMEOUT", "5")),
+    ]
+
+
+def _set_mode(pidfile, mode: str) -> None:
+    """Flip the fake worker's behaviour mid-test (the child no longer reads our environment)."""
+    pidfile.write_text  # noqa: B018 - keeps the type obvious to a reader
+    with open(str(pidfile) + ".mode", "w", encoding="utf-8") as handle:
+        handle.write(mode)
+
+
 def _kokoro(tmp_path, monkeypatch, **env):
     script = _write_worker(tmp_path)
     pidfile = tmp_path / "pids"
-    monkeypatch.setenv("FAKE_KOKORO_PIDFILE", str(pidfile))
-    for key, value in env.items():
-        monkeypatch.setenv(key, value)
     tts = KokoroTTS(
         timeout=float(env.get("TIMEOUT", "5")),
-        worker_cmd=[sys._base_executable, "-u", str(script)],
+        worker_cmd=_worker_argv(script, pidfile, env),
     )
     return tts, pidfile
 
@@ -185,13 +217,10 @@ def _piper(tmp_path, monkeypatch, **env):
     script = tmp_path / "fake_piper.py"
     script.write_text(FAKE_WORKER)
     pidfile = tmp_path / "piper_pids"
-    monkeypatch.setenv("FAKE_KOKORO_PIDFILE", str(pidfile))
-    monkeypatch.setenv("FAKE_KOKORO_RATE", "22050")
-    for key, value in env.items():
-        monkeypatch.setenv(key, value)
+    env = {"FAKE_KOKORO_RATE": "22050", **env}
     tts = PiperTTS(
         timeout=float(env.get("TIMEOUT", "5")),
-        worker_cmd=[sys._base_executable, "-u", str(script)],
+        worker_cmd=_worker_argv(script, pidfile, env),
     )
     return tts, pidfile
 
@@ -439,7 +468,7 @@ async def test_kokoro_timeout_kills_and_next_call_restarts(tmp_path, monkeypatch
         hung = _pids(pidfile)
         assert len(hung) == 1
         assert not _alive(hung[0])
-        monkeypatch.setenv("FAKE_KOKORO_MODE", "sine")
+        _set_mode(pidfile, "sine")
         pcm = await tts.synthesize("hello")
         pids = _pids(pidfile)
         assert len(pids) == 2

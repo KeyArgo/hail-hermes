@@ -15,6 +15,7 @@ from typing import Any
 
 from .protocol import DEFAULT_PORT
 from .settings import DEFAULTS, read_settings, update_settings
+from .childenv import minimal_env
 
 
 def load_config(path: str | None) -> dict[str, Any]:
@@ -183,6 +184,8 @@ def _watch(apk: str | None) -> int:
     try:
         result = subprocess.run(
             [adb, "devices"], capture_output=True, text=True, check=True, timeout=30,
+            # adb needs PATH and little else; it must not inherit provider keys (review item 2).
+            env=minimal_env(),
         )
     except subprocess.TimeoutExpired:
         print("adb did not answer within 30 seconds; run `adb kill-server` and try again.", file=sys.stderr)
@@ -209,11 +212,11 @@ def _watch(apk: str | None) -> int:
         if apk:
             subprocess.run(
                 [adb, "-s", serial, "install", "-r", str(Path(apk).expanduser())],
-                check=True, timeout=300,
+                check=True, timeout=300, env=minimal_env(),
             )
         subprocess.run(
             [adb, "-s", serial, "reverse", "tcp:8767", "tcp:8767"],
-            check=True, timeout=30,
+            check=True, timeout=30, env=minimal_env(),
         )
     except subprocess.TimeoutExpired:
         print("adb stopped answering while preparing the watch; reconnect it and try again.", file=sys.stderr)

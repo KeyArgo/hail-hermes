@@ -21,6 +21,7 @@ import wave
 from typing import Any, Protocol
 
 from .protocol import SAMPLE_RATE
+from .childenv import minimal_env
 
 log = logging.getLogger(__name__)
 
@@ -133,8 +134,12 @@ def resample(samples: array.array, src: int, dst: int) -> array.array:
 
 
 async def _run(argv: list[str], stdin: bytes | None = None, timeout: float = 60.0) -> bytes:
+    # A `command` backend is configured by the owner, but it is still a child we spawn: it gets the
+    # minimal environment, not a copy of ours with every provider key in it (review item 2).
     proc = await asyncio.create_subprocess_exec(
-        *argv, stdin=asyncio.subprocess.PIPE if stdin is not None else asyncio.subprocess.DEVNULL,
+        *argv,
+        env=minimal_env(),
+        stdin=asyncio.subprocess.PIPE if stdin is not None else asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
     )
     try:
@@ -500,7 +505,7 @@ def _ffmpeg_to_pcm16k(path: str) -> bytes:
         raise TTSError("ffmpeg_needed")
     proc = subprocess.run(
         [binary, "-v", "quiet", "-i", path, "-f", "s16le", "-ac", "1", "-ar", str(SAMPLE_RATE), "pipe:1"],
-        capture_output=True, check=False,
+        capture_output=True, check=False, env=minimal_env(),
     )
     if proc.returncode != 0 or not proc.stdout:
         raise TTSError()
@@ -620,10 +625,18 @@ class _WorkerTTS:
         return self._default_command()
 
     def _child_env(self) -> dict[str, str]:  # also bound onto ParakeetSTT below
-        """Environment for the worker. A GPU venv ships its CUDA libraries inside site-packages/nvidia."""
-        env = dict(os.environ)
+        """Environment for the worker. A GPU venv ships its CUDA libraries inside site-packages/nvidia.
+
+        Built from the allowlist in ``childenv`` rather than ``dict(os.environ)``: the worker is a
+        separate interpreter running a third-party model, and it has no use for the owner's API keys
+        (review item 2).
+        """
         venv = os.path.dirname(os.path.dirname(os.path.expanduser(getattr(self, "python", "") or "")))
         libs = sorted(glob.glob(os.path.join(venv, "lib*", "python3*", "site-packages", "nvidia", "*", "lib")))
+        extra = {}
+        if venv:
+            extra["VIRTUAL_ENV"] = venv
+        env = minimal_env(extra)
         if libs:
             env["LD_LIBRARY_PATH"] = ":".join(libs + [env.get("LD_LIBRARY_PATH", "")]).rstrip(":")
         return env
