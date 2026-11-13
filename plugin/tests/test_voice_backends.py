@@ -51,8 +51,12 @@ FAKE_WORKER = textwrap.dedent("""\
     import sys
     import time
 
-    # argv: <pidfile> <mode> <rate> <seconds> [timeout] — passed by the helpers below, because the
+    # argv: <pidfile> <mode> <rate> <seconds> [timeout] - passed by the helpers below, because the
     # worker is spawned with a minimal environment now (review item 2).
+    #
+    # ASCII only, on purpose: this file is written by the parent and parsed by a child interpreter, and a
+    # non-ASCII byte written with a platform default encoding (cp1252 on Windows) is not valid UTF-8, so
+    # the child dies with a SyntaxError before it reads a single request.
     argv = sys.argv[1:] + ["", "sine", "24000", "0.25", "5"]
     mode = argv[1] or "sine"
     pidfile = argv[0]
@@ -124,7 +128,7 @@ FAKE_WORKER = textwrap.dedent("""\
 
 def _write_worker(tmp_path):
     script = tmp_path / "fake_kokoro.py"
-    script.write_text(FAKE_WORKER)
+    script.write_text(FAKE_WORKER, encoding="utf-8")
     return script
 
 
@@ -215,7 +219,7 @@ def _kokoro(tmp_path, monkeypatch, **env):
 
 def _piper(tmp_path, monkeypatch, **env):
     script = tmp_path / "fake_piper.py"
-    script.write_text(FAKE_WORKER)
+    script.write_text(FAKE_WORKER, encoding="utf-8")
     pidfile = tmp_path / "piper_pids"
     env = {"FAKE_KOKORO_RATE": "22050", **env}
     tts = PiperTTS(
@@ -694,7 +698,7 @@ def test_build_tts_piper_and_auto(tmp_path, monkeypatch):
 
     # Kokoro files exist (no Piper yet): auto selects KokoroTTS; piper falls back to KokoroTTS.
     kokoro_py.parent.mkdir(parents=True, exist_ok=True)
-    kokoro_py.write_text("")
+    kokoro_py.write_text("", encoding="utf-8")
     kokoro_dir.mkdir(parents=True, exist_ok=True)
     (kokoro_dir / "kokoro-v1.0.onnx").write_bytes(b"onnx")
     (kokoro_dir / "voices-v1.0.bin").write_bytes(b"voices")
@@ -711,7 +715,7 @@ def test_build_tts_piper_and_auto(tmp_path, monkeypatch):
 
     # Piper files also exist: auto prefers PiperTTS (with Kokoro fallback).
     piper_py.parent.mkdir(parents=True, exist_ok=True)
-    piper_py.write_text("")
+    piper_py.write_text("", encoding="utf-8")
     piper_model.parent.mkdir(parents=True, exist_ok=True)
     piper_model.write_bytes(b"piper-onnx")
 
@@ -731,7 +735,7 @@ def test_cli_serve_default_agent_toolsets_and_voice_settings(tmp_path, monkeypat
     piper_py = tmp_path / "piper" / "python"
     piper_model = tmp_path / "piper" / "model.onnx"
     piper_py.parent.mkdir(parents=True, exist_ok=True)
-    piper_py.write_text("")
+    piper_py.write_text("", encoding="utf-8")
     piper_model.write_bytes(b"onnx")
     monkeypatch.setattr("hail_hermes.audio._PIPER_PYTHON", str(piper_py))
     monkeypatch.setattr("hail_hermes.audio._PIPER_MODEL", str(piper_model))
@@ -801,3 +805,37 @@ async def test_real_kokoro_smoke():
         )
     finally:
         await tts.close()
+
+
+def test_the_fake_worker_is_ascii_so_no_platform_encoding_can_break_it(tmp_path):
+    """The child parses this file; the parent's default encoding must not be able to corrupt it.
+
+    Windows CI failed every Kokoro and Piper test with "synthesis failed" because this source contained a
+    non-ASCII character and was written with the platform default (cp1252): the child interpreter then read
+    0x97 where UTF-8 required a sequence and died before answering. ASCII source plus an explicit encoding
+    makes the two halves agree on every platform.
+    """
+    script = _write_worker(tmp_path)
+    raw = script.read_bytes()
+    raw.decode("utf-8")  # what the child interpreter requires
+    assert raw == FAKE_WORKER.encode("ascii"), (
+        "the fake worker must be ASCII: any non-ASCII byte is written with the platform default encoding"
+    )
+    assert "\r\n" not in FAKE_WORKER, "keep the line endings plain; the child reads it as source"
+
+
+def test_the_fake_worker_runs_when_spawned_like_windows_would(tmp_path, monkeypatch):
+    """A child started from a written file still speaks the protocol — the path, not the mock."""
+    import json
+    import subprocess
+
+    script = _write_worker(tmp_path)
+    pidfile = tmp_path / "pids"
+    proc = subprocess.run(
+        [sys._base_executable, "-u", str(script), str(pidfile), "sine", "24000", "0.05", "5"],
+        input=(json.dumps({"id": 1, "text": "hello"}) + "\n").encode("utf-8"),
+        capture_output=True, timeout=60, check=False,
+    )
+    header = json.loads(proc.stdout.split(b"\n", 1)[0])
+    assert header["ok"] is True, proc.stderr.decode("utf-8", "replace")[-400:]
+    assert header["rate"] == 24000 and header["bytes"] > 0
