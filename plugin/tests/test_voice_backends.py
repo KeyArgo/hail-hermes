@@ -178,7 +178,7 @@ def _block_on(release: threading.Event, started: threading.Event, calls: dict):
 
 
 async def _transcribe_when_free(stt: HermesSTT, pcm: bytes) -> str:
-    deadline = time.monotonic() + 2.0
+    deadline = time.monotonic() + 15.0
     while True:
         try:
             return await stt.transcribe(pcm)
@@ -314,11 +314,14 @@ async def test_hermes_stt_timeout_keeps_one_daemon_worker():
     before = _idents()
     task = asyncio.create_task(stt.transcribe(pcm))
     try:
-        for _ in range(200):
+        # A shared CI runner can take seconds to schedule the worker thread; the old two-second window
+        # reported that as "transcription is broken". Poll (not `to_thread`: this test counts threads, and
+        # the executor would add one of its own).
+        for _ in range(1500):
             if started.is_set():
                 break
             await asyncio.sleep(0.01)
-        assert started.is_set()
+        assert started.is_set(), "the transcriber thread never started"
         with pytest.raises(STTError) as caught:
             await task
         err = caught.value
@@ -335,7 +338,9 @@ async def test_hermes_stt_timeout_keeps_one_daemon_worker():
         marked = time.monotonic()
         with pytest.raises(STTError) as caught:
             await stt.transcribe(pcm)
-        assert time.monotonic() - marked < 0.25
+        # It must refuse instead of queueing behind the busy worker (which is blocked for 30 s); a loaded
+        # runner spends a few hundred ms on scheduling alone, so the bound is generous but still decisive.
+        assert time.monotonic() - marked < 2.0
         assert caught.value.code == "stt_failed"
         assert str(caught.value) == "transcription failed"
         assert calls["n"] == 1
@@ -364,11 +369,14 @@ async def test_hermes_stt_cancel_keeps_one_daemon_worker():
     before = _idents()
     task = asyncio.create_task(stt.transcribe(pcm))
     try:
-        for _ in range(200):
+        # A shared CI runner can take seconds to schedule the worker thread; the old two-second window
+        # reported that as "transcription is broken". Poll (not `to_thread`: this test counts threads, and
+        # the executor would add one of its own).
+        for _ in range(1500):
             if started.is_set():
                 break
             await asyncio.sleep(0.01)
-        assert started.is_set()
+        assert started.is_set(), "the transcriber thread never started"
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
@@ -381,7 +389,9 @@ async def test_hermes_stt_cancel_keeps_one_daemon_worker():
         marked = time.monotonic()
         with pytest.raises(STTError) as caught:
             await stt.transcribe(pcm)
-        assert time.monotonic() - marked < 0.25
+        # It must refuse instead of queueing behind the busy worker (which is blocked for 30 s); a loaded
+        # runner spends a few hundred ms on scheduling alone, so the bound is generous but still decisive.
+        assert time.monotonic() - marked < 2.0
         assert caught.value.code == "stt_failed"
         assert str(caught.value) == "transcription failed"
         assert calls["n"] == 1
