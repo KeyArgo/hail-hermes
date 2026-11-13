@@ -27,3 +27,6 @@ RESULT.txt
 # aislop: the finding history is engine state, not source
 .aislop/history.jsonl
 BUILD_INFO.json
+tools/pane_jsdom/node_modules/
+tools/pane_jsdom/plugin.mjs
+tools/pane_jsdom/package-lock.json
