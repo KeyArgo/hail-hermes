@@ -1500,13 +1500,23 @@ class PocketHub:
         return sess.turn is not None and not sess.turn.done()
 
     async def _interrupt(self, sess: Session) -> None:
-        """Invalidate and cancel the current turn without waiting for its backend."""
+        """Invalidate and cancel the current turn without waiting for its backend.
+
+        Only a turn that is actually running is cancelled. An interrupt that arrives while the device is
+        idle used to bump the generation and clear the queued turns anyway, which could silently swallow a
+        background hand-off result that was launching in that same instant: the result's turn started
+        with a stale generation, saw itself as dead, and said nothing at all — no speech, no text, and no
+        ``idle`` frame for the watch to leave "thinking" on. Interrupting when nothing is running now
+        leaves the session alone.
+        """
         task = sess.turn
-        self._cancel_turn(sess)
-        if sess.turn is task:
-            sess.turn = None
-        sess.interrupted_pending = True
-        await self._log_turn(sess, "interrupted")
+        running = task is not None and not task.done()
+        if running:
+            self._cancel_turn(sess)
+            if sess.turn is task:
+                sess.turn = None
+            sess.interrupted_pending = True
+            await self._log_turn(sess, "interrupted")
         # The dispatch path also sets idle, but a replacement turn may have started between the two;
         # settling here is what guarantees at least one idle after a cancelled turn.
         await self._settle(sess)
