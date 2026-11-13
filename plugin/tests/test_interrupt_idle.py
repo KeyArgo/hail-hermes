@@ -113,9 +113,8 @@ class BlockingTTS:
 async def test_an_interrupt_during_a_delivery_does_not_delete_the_answer(state_dir):
     """The moment an answer is being handed over is the one moment it must not be deleted.
 
-    The delivery turn has been launched but has not finished when the interrupt lands; bumping the
-    generation there would take the text with it — answer gone, and no idle frame to leave "thinking" on.
-    The interrupt now silences the speech and lets the text through.
+    The tap landed on a screen that looked idle, so it was not aimed at an answer the owner had not seen
+    yet; the delivery carries on, text and audio, and ends on a real idle.
     """
     tts = BlockingTTS()
     async with running_hub(state_dir, agent=FakeAgent(), tts=tts) as hub:
@@ -130,8 +129,6 @@ async def test_an_interrupt_during_a_delivery_does_not_delete_the_answer(state_d
 
             await c.send("interrupt")
             await asyncio.sleep(0.1)
-            assert session.stop_speech is True, "the interrupt did not reach the in-flight delivery"
-
             tts.release.set()
             msgs = await c.until(is_type("state", screen="idle"), timeout=10)
 
@@ -139,8 +136,28 @@ async def test_an_interrupt_during_a_delivery_does_not_delete_the_answer(state_d
               if isinstance(m, dict) and m.get("type") == "transcript"
               and m.get("role") == "assistant" and m.get("final")]
     assert "Dentist at 4 PM." in finals, f"the answer was deleted: {finals}"
-    assert session.stop_speech is False, "the stop flag must not survive the turn"
     assert session.delivery_pending is False
+
+
+async def test_an_interrupt_after_the_answer_is_on_screen_still_stops_it(state_dir):
+    """Once the text is published, an interrupt is a request to stop — the normal cancel path."""
+    agent = FakeAgent(block=True, chunks=("A long answer.",))
+    async with running_hub(state_dir, agent=agent) as hub:
+        async with Client.open(hub) as c:
+            device_id, _token, _welcome = await c.pair()
+            hub.store.set_device_mode(device_id, "session")
+
+            await c.send("text", text="tell me a long story")
+            await asyncio.wait_for(agent.started.wait(), 10)
+            await c.until(lambda m: isinstance(m, dict) and m.get("type") == "transcript"
+                          and m.get("role") == "assistant", timeout=10)
+
+            await c.send("interrupt")
+            for _ in range(500):
+                if agent.cancelled.is_set():
+                    break
+                await asyncio.sleep(0.01)
+            assert agent.cancelled.is_set(), "an interrupt after the text was published did not stop the turn"
 
 
 async def test_a_delivered_answer_announces_itself(state_dir):

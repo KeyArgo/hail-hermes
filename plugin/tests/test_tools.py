@@ -44,7 +44,12 @@ async def test_say_speaks_on_device(state_dir):
         res = await tool(state_dir, "say", text="It's Thursday.")
         assert res["ok"] and res["audio"]
         msgs = await c.until(is_type("state", screen="idle"))
-        assert msgs[0] == {"type": "transcript", "v": 2, "role": "assistant", "text": "It's Thursday.", "final": True}
+        # A spoken delivery says it is working before it publishes, so the closing idle is a real
+        # transition rather than a duplicate the client never receives.
+        assert msgs[0] == {"type": "state", "v": 2, "screen": "thinking"}
+        spoken = [m for m in msgs if isinstance(m, dict) and m.get("type") == "transcript"]
+        assert spoken == [{"type": "transcript", "v": 2, "role": "assistant",
+                           "text": "It's Thursday.", "final": True}]
         assert any(is_type("audio_start")(m) for m in msgs) and any(is_type("audio_end")(m) for m in msgs)
 
 
