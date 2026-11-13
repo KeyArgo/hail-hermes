@@ -41,10 +41,10 @@ Android SDK 35.
 
 | Host | OS | Python | Commit | Suites | Exit |
 |---|---|---|---|---|---|
-| Linux workstation | Linux 7.1.2 x86_64 | 3.13.13 | `386a6c8` | `381 passed, 1 skipped` (plugin) · `6 passed` (simulator) · `30 passed` (facesmith) | **0** |
+| Linux workstation | Linux 7.1.2 x86_64 | 3.13.13 | `386a6c8` | `406 passed, 1 skipped` (plugin) · `6 passed` (simulator) · `30 passed` (facesmith) | **0** |
 | Windows | — | — | — | **not yet measured** | — |
 
-**Total: 417 passed, 1 skipped.** The badge at the top of the README uses the passed count.
+**Total: 442 passed, 1 skipped.** The badge at the top of the README uses the passed count.
 
 The Kotlin/Gradle suites were **not run on the Linux workstation used for this record** because it
 has no JDK compiler installed (`java` is present but `javac` is not). CI runs them in
