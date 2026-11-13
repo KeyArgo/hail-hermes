@@ -2628,22 +2628,45 @@ class PocketHub:
                 await ws.send(json.dumps(reply))
 
 
+_LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "::1")
+
+
 def _allowed_device_origin(origin: str) -> bool:
-    # `origin == "null"` used to be allowed, and it is the value a sandboxed frame, a `file://` page and
-    # a data: URL all send — none of which identify anything (review item 4). A real desktop origin is a
-    # loopback http(s) URL, which the checks below cover.
+    """Whether a browser or desktop origin may open the device endpoint.
+
+    Quality review: this used to allow *any* scheme it did not recognise, so "untrusted origin" only
+    meant two literal spellings — `file://`, `data:`, `blob:`, `chrome-extension:` and anything else all
+    walked in. The accepted set is explicit now:
+
+    * a loopback http(s) page with an explicit port — the pane in a browser, a dev server;
+    * `file://` — the packaged Electron renderer, which no remote page can forge;
+    * no Origin at all — the watch, `adb`, a script (handled by the caller: an absent header is allowed).
+
+    Everything else is refused, including `null` (a sandboxed frame, a data: URL), remote http(s) pages
+    and unknown schemes.
+
+    The origin is a speed bump, not the lock. What actually guards the hub is the owner's pairing
+    approval and the per-device token afterwards; a desktop origin we cannot attest to still has to be
+    approved in the panel before it can do anything.
+    """
     try:
         parsed = urlsplit(origin)
-        if parsed.scheme in ("http", "https"):
-            return (
-                parsed.hostname in ("127.0.0.1", "localhost", "::1")
-                and parsed.username is None
-                and parsed.password is None
-                and parsed.port is not None or False
-            )
-        return bool(parsed.scheme and origin.startswith(parsed.scheme + "://"))
     except ValueError:
         return False
+    if parsed.username is not None or parsed.password is not None:
+        return False
+    scheme = parsed.scheme.lower()
+    if scheme in ("http", "https"):
+        try:
+            port = parsed.port
+        except ValueError:
+            # A malformed port ("http://127.0.0.1:8765.evil.example") is not a loopback page.
+            return False
+        return parsed.hostname in _LOOPBACK_HOSTS and port is not None
+    if scheme == "file":
+        # `file:///path` has no host; `file://host/path` would name a share, which is not the app.
+        return parsed.hostname in (None, "", "localhost")
+    return False
 
 
 def _battery(raw: dict[str, Any]) -> dict[str, Any]:

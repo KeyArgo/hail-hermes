@@ -151,9 +151,11 @@ class Client:
 
     @classmethod
     @contextlib.asynccontextmanager
-    async def open(cls, hub: PocketHub, path: str | None = None):
+    async def open(cls, hub: PocketHub, path: str | None = None, origin: str | None = None):
+        """Connect as a device. ``origin`` mimics a browser/desktop handshake for the origin checks."""
         url = hub.url if path is None else f"ws://127.0.0.1:{hub.port}{path}"
-        async with connect(url) as ws:
+        headers = {"Origin": origin} if origin is not None else None
+        async with connect(url, additional_headers=headers) as ws:
             yield cls(ws, hub)
 
     async def send(self, type_: str, **fields: Any) -> None:
