@@ -1858,6 +1858,14 @@ class PocketHub:
 
         m_rem = re.match(r"^[\W_]*remember\b[\s,:;-]*(.*)$", text.strip(), re.IGNORECASE | re.DOTALL)
         if m_rem:
+            # Quality review, blocker: a session has the agent's own memory toolset, with an entry
+            # format, a size budget and a safety scan. Intercepting "remember …" here swallowed the
+            # request — the agent never saw it — and stored it where only quick mode looks. In session
+            # mode the sentence goes to the agent untouched; the plugin's facts file is for quick mode,
+            # which has no agent to hand it to.
+            mode, _sid, _title = self._effective_mode(sess.device.device_id)
+            if mode != "quick":
+                return None
             rest = m_rem.group(1).strip()
             m_that = re.match(r"^that\b[\s,:;-]*(.*)$", rest, re.IGNORECASE | re.DOTALL)
             if m_that:
