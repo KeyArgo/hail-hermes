@@ -2929,27 +2929,17 @@ async function pollStatus(ctx) {
   statusPoll = (async () => {
     try {
       let status, pend, cfg
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 2000)
-      try {
-        const response = await fetch('http://127.0.0.1:8767/status', { signal: controller.signal, cache: 'no-store' })
-        if (!response.ok) throw new Error('status unavailable')
-        const direct = await response.json()
-        if (!direct?.running || !Array.isArray(direct.pending) || !Array.isArray(direct.devices)) throw new Error('invalid status')
-        status = { ...bridgeMetadata, ...direct, ws_url: 'ws://127.0.0.1:8767/pocket' }
-        pend = { pending: direct.pending }
-        cfg = wristSnapshot.settings
-        refreshMetadata(ctx)
-      } catch {
-        status = await ctx.rest('/status', { timeoutMs: 3000 })
-        if (!status?.running || status?.error) throw new Error('busy')
-        bridgeMetadata = status
-        ;[pend, cfg] = await Promise.all([
-          ctx.rest('/pending', { timeoutMs: 3000 }),
-          ctx.rest('/settings', { timeoutMs: 3000 })
-        ])
-        if (pend?.error) throw new Error('busy')
-      } finally { clearTimeout(timer) }
+      // One route, the plugin's own (review item 4). A direct `fetch` of the hub's loopback `/status`
+      // needed a wildcard CORS header on that endpoint, which is a wider hole than the convenience was
+      // worth: this call already returns `ws_url`, `running`, `devices` and the mirror.
+      status = await ctx.rest('/status', { timeoutMs: 3000 })
+      if (!status?.running || status?.error) throw new Error('busy')
+      bridgeMetadata = status
+      ;[pend, cfg] = await Promise.all([
+        ctx.rest('/pending', { timeoutMs: 3000 }),
+        ctx.rest('/settings', { timeoutMs: 3000 })
+      ])
+      if (pend?.error) throw new Error('busy')
       statusCached = { status, pend, cfg }
       statusFailures = 0
       statusNextAt = Date.now() + POLL_BASE_MS

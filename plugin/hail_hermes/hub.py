@@ -558,7 +558,9 @@ class PocketHub:
                                "devices": devices, "pending": pending})
             response = conn.respond(200, body)
             response.headers["Content-Type"] = "application/json"
-            response.headers["Access-Control-Allow-Origin"] = "*"
+            # No `Access-Control-Allow-Origin: *` here (review item 4). The desktop pane reads this
+            # route through `ctx.rest('/status')`, i.e. over the plugin's own API, so a wildcard only
+            # widened what any web page could read from a loopback service.
             response.headers["Cache-Control"] = "no-store"
             return response
         if path == self.config.path:
@@ -2619,8 +2621,9 @@ class PocketHub:
 
 
 def _allowed_device_origin(origin: str) -> bool:
-    if origin == "null":
-        return True
+    # `origin == "null"` used to be allowed, and it is the value a sandboxed frame, a `file://` page and
+    # a data: URL all send — none of which identify anything (review item 4). A real desktop origin is a
+    # loopback http(s) URL, which the checks below cover.
     try:
         parsed = urlsplit(origin)
         if parsed.scheme in ("http", "https"):

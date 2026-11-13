@@ -35,7 +35,9 @@ async def test_status_is_loopback_only_and_redacted(state_dir, monkeypatch):
     assert calls == [store.paired]
     data = json.loads(response.body)
     assert response.status_code == 200
-    assert response.headers['Access-Control-Allow-Origin'] == '*'
+    assert 'Access-Control-Allow-Origin' not in response.headers, (
+        'the hub must not hand a loopback route a wildcard CORS header (review item 4)'
+    )
     assert set(data) == {'running', 'version', 'mode', 'character', 'devices', 'pending'}
     assert data['devices'] == [{'name': 'Watch', 'kind': 'watch', 'connected': False, 'last_seen': None}]
     assert token not in response.body and 'secret-id' not in response.body and 'token' not in response.body
