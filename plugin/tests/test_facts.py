@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from conftest import Client, is_type, running_hub
 from hail_hermes import facts
 from hail_hermes.facts import append_fact, facts_block, facts_path, read_facts
 
@@ -82,6 +83,15 @@ def test_the_prompt_block_names_the_source_honestly(tmp_path):
     assert "- I prefer dark mode" in block
 
 
+def _core_memory(tmp_path, monkeypatch, text="- the agent knows this\n"):
+    """A real Hermes profile with its own MEMORY.md, the file this plugin must never write."""
+    core = tmp_path / "profiles" / "work" / "memories" / "MEMORY.md"
+    core.parent.mkdir(parents=True, exist_ok=True)
+    core.write_text(text, encoding="utf-8")
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "profiles" / "work"))
+    return core
+
+
 def test_the_pane_memory_route_reads_the_plugin_file(tmp_path, monkeypatch):
     """`GET /memory` feeds the panel; it must show these facts and not core's file."""
     plugin_api = _plugin_api()
@@ -106,3 +116,59 @@ def test_the_pane_can_write_a_fact(tmp_path, monkeypatch):
     body = plugin_api.post_memory({"fact": "I prefer dark mode"})
     assert body["ok"] is True and body["saved"] is True
     assert read_facts(tmp_path) == ["I prefer dark mode"]
+
+
+def test_the_dashboard_route_leaves_core_memory_alone(tmp_path, monkeypatch):
+    """The panel's own route: write through it, then look at both files."""
+    plugin_api = _plugin_api()
+    core = _core_memory(tmp_path, monkeypatch)
+    before = core.read_bytes()
+
+    monkeypatch.setattr(plugin_api, "_resolve_state_dir", lambda: Path(tmp_path))
+    monkeypatch.setattr(plugin_api, "_run_bounded", lambda fn, *a, **k: fn(*a))
+
+    body = plugin_api.post_memory({"fact": "The studio is upstairs"})
+
+    assert body["ok"] is True
+    assert read_facts(tmp_path) == ["The studio is upstairs"]
+    assert core.read_bytes() == before, "the dashboard route wrote to Hermes' MEMORY.md"
+    assert plugin_api.get_memory()["lines"] == ["- The studio is upstairs"]
+
+
+class _Quick:
+    """Minimal quick backend: the hub only needs something that can stream an answer."""
+
+    async def run(self, device, text):
+        yield "ok"
+
+
+async def test_the_voice_route_leaves_core_memory_alone(state_dir, tmp_path, monkeypatch):
+    """The watch's path: a quick-mode "remember …" over the socket."""
+    core = _core_memory(tmp_path, monkeypatch)
+    before = core.read_bytes()
+
+    async with running_hub(state_dir, quick_agent=_Quick()) as hub:
+        async with Client.open(hub) as c:
+            device_id, _token, _welcome = await c.pair()
+            hub.store.set_device_mode(device_id, "quick")
+            await c.send("text", text="Remember that I prefer dark mode.")
+            await c.until(is_type("state", screen="idle"), timeout=5)
+
+    assert read_facts(state_dir) == ["I prefer dark mode"]
+    assert core.read_bytes() == before, "a voice command wrote to Hermes' MEMORY.md"
+
+
+async def test_the_voice_route_in_a_session_does_not_touch_either_file(state_dir, tmp_path, monkeypatch):
+    """A session's memory belongs to the agent; the plugin writes nothing at all."""
+    core = _core_memory(tmp_path, monkeypatch)
+    before = core.read_bytes()
+
+    async with running_hub(state_dir) as hub:
+        async with Client.open(hub) as c:
+            device_id, _token, _welcome = await c.pair()
+            hub.store.set_device_mode(device_id, "session")
+            await c.send("text", text="Remember that I prefer dark mode.")
+            await c.until(is_type("state", screen="idle"), timeout=5)
+
+    assert read_facts(state_dir) == [], "session mode must not write the plugin's facts"
+    assert core.read_bytes() == before
