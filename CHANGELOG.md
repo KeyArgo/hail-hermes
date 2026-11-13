@@ -26,6 +26,23 @@ The hackathon entry pins commit `65bf0ba` ([NousResearch/hermes-agent#154028](ht
 - **The version chip tells a release from a development build.** A catalog install of the pinned commit, or a checkout at the release tag, reads `X.Y.Z`; any other build reads `X.Y.Z-dev`. `tools/release_check.py` and the release workflow keep the version, the changelog, the tag and the GitHub release in step.
 - **Documentation:** a rebuilt README with a recorded demo and current Hermes Desktop screenshots, and a full docs set (usage, reference, architecture, configuration, troubleshooting, FAQ, development and testing).
 - **Project files:** contributing guide, code of conduct, security policy, issue and pull request templates, and CODEOWNERS.
+- **Review fixes (Nous catalogue, `teknium1`, 2026-11-12):**
+  - **No compiled binaries in the repo.** Both `gradle-wrapper.jar` files are gone; CI and a local
+    build generate the wrapper with `gradle wrapper`, and `gradle-wrapper.properties` pins the
+    distribution checksum so the download is the one we meant.
+  - **Child processes get a minimal environment.** The TTS/STT worker, ffmpeg, `command` backends and
+    `adb` no longer inherit `dict(os.environ)` — an allowlist (`PATH`, `HOME`, `LANG`, `TMPDIR`,
+    `LD_LIBRARY_PATH`, `POCKET_TTS_*`, `SYSTEMROOT` on Windows) replaces it, so provider keys in the
+    parent process no longer reach programs this plugin did not write.
+  - **Facts are the plugin's own.** `remember …` writes `facts.md` in the plugin's state directory
+    instead of appending to Hermes' `MEMORY.md`, which is core's to own (format, budget and safety
+    scan). The pane's memory route reads the same file; the agent's memory is changed by talking to
+    the agent, not by voice commands to this plugin.
+  - **No wildcard CORS and no `null` origin.** `/status` no longer sends
+    `Access-Control-Allow-Origin: *`, and a device origin of `null` is refused; the pane reads
+    `/status` through `ctx.rest`, which is what the wildcard existed for.
+  - **`websockets` is declared in `plugin.yaml`** (`python_dependencies`), not only in
+    `pyproject.toml`, which the root installer never reads.
 
 ## Development history (before 1.0.0)
 

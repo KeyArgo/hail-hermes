@@ -9,6 +9,8 @@ description: >
   there is no automatic approval path. Works on your local network only.
 author: Hail Hermes contributors
 license: MIT
+python_dependencies:
+  - "websockets>=13,<16"
 provides_tools:
   - device_notify
   - device_say

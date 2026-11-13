@@ -13,6 +13,8 @@ description: >
   The panel needs no hardware. Built to keep working when things go wrong — the watch reconnects by
   itself after the hub restarts or the network drops. Pairing is a code approved on this computer;
   there is no automatic approval path. Works on your local network only.
+python_dependencies:
+  - "websockets>=13,<16"
 provides_tools:
   - device_notify
   - device_say
