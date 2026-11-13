@@ -59,21 +59,25 @@ def append_fact(fact: str, state_dir: str | Path) -> Path:
         raise ValueError("memory fact must not be empty")
     target = facts_path(state_dir)
     target.parent.mkdir(parents=True, exist_ok=True)
-    with open(target, "a+", encoding="utf-8") as fh:
+    # Binary and positional ("r+b"), deliberately: byte offsets are exact on every platform, text mode
+    # would translate newlines (CRLF on Windows) behind that arithmetic, and "a" mode ignores seek — every
+    # write lands at the end, which would make the in-place trim append instead of replace.
+    try:
+        handle = open(target, "r+b")
+    except FileNotFoundError:
+        handle = open(target, "w+b")
+    with handle as fh:
         filelock.lock(fh)
         try:
             fh.seek(0)
+            text = fh.read().decode("utf-8", "replace")
             existing = [line.strip()[2:].strip().lower()
-                        for line in fh.read().splitlines() if line.strip().startswith("- ")]
+                        for line in text.splitlines() if line.strip().startswith("- ")]
             if cleaned.lower() in existing:
                 return target
+            prefix = "\n" if text and not text.endswith("\n") else ""
             fh.seek(0, os.SEEK_END)
-            size = fh.tell()
-            needs_newline = False
-            if size > 0:
-                fh.seek(size - 1, os.SEEK_SET)
-                needs_newline = fh.read(1) != "\n"
-            fh.write(("\n" if needs_newline else "") + f"- {cleaned}\n")
+            fh.write((prefix + f"- {cleaned}\n").encode("utf-8"))
             fh.flush()
             _trim_locked(fh)
         finally:
@@ -92,14 +96,22 @@ def facts_block(state_dir: str | Path) -> str:
 def _trim_locked(fh) -> None:
     """Keep the newest MAX_FACTS lines so a long-lived install cannot grow without bound.
 
-    Called with the caller's lock already held and the same handle: the rewrite is part of the append, not
-    a follow-up that another writer can slip in front of.
+    Called with the caller's lock already held and on the same handle: the rewrite is part of the append, not
+    a follow-up another writer can slip in front of. The new text is written over the old, the leftover tail
+    is padded with blank lines, and only then is the file cut to size — so a reader that arrives mid-rewrite
+    sees whole lines, never a fragment of one (which a truncate-then-write would show it).
     """
     fh.seek(0)
-    lines = [line for line in fh.read().splitlines() if line.strip()]
+    raw = fh.read()
+    lines = [line for line in raw.decode("utf-8", "replace").splitlines() if line.strip()]
     if len(lines) <= MAX_FACTS:
         return
+    data = ("\n".join(lines[-MAX_FACTS:]) + "\n").encode("utf-8")
     fh.seek(0)
-    fh.truncate()
-    fh.write("\n".join(lines[-MAX_FACTS:]) + "\n")
+    fh.write(data)
+    pad = len(raw) - len(data)
+    if pad > 0:
+        fh.write(b"\n" * pad)
+    fh.flush()
+    fh.truncate(len(data))
     fh.flush()

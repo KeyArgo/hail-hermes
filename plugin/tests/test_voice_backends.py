@@ -128,7 +128,7 @@ FAKE_WORKER = textwrap.dedent("""\
 
 def _write_worker(tmp_path):
     script = tmp_path / "fake_kokoro.py"
-    script.write_text(FAKE_WORKER, encoding="utf-8")
+    script.write_text(FAKE_WORKER, encoding="utf-8", newline="\n")
     return script
 
 
@@ -219,7 +219,7 @@ def _kokoro(tmp_path, monkeypatch, **env):
 
 def _piper(tmp_path, monkeypatch, **env):
     script = tmp_path / "fake_piper.py"
-    script.write_text(FAKE_WORKER, encoding="utf-8")
+    script.write_text(FAKE_WORKER, encoding="utf-8", newline="\n")
     pidfile = tmp_path / "piper_pids"
     env = {"FAKE_KOKORO_RATE": "22050", **env}
     tts = PiperTTS(
