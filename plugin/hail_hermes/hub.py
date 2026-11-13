@@ -2410,6 +2410,10 @@ class PocketHub:
         if not self._live(sess, gen):
             return
         try:
+            # Declare the work before publishing it. Without this the screen is already idle when the
+            # answer lands, so the turn's closing "idle" is a duplicate and is dropped — the watch sees
+            # text appear with no state change, and a client that waits for the next idle waits forever.
+            await self.set_screen(sess, "thinking", gen)
             await self._log_turn(sess, "ask", gen=gen, source="say", text=text)
             await self._drain_speech(sess, gen, text)
             await self._log_turn(sess, "answer", gen=gen, source="say", text=text)

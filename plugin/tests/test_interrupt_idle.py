@@ -141,3 +141,23 @@ async def test_an_interrupt_during_a_delivery_does_not_delete_the_answer(state_d
     assert "Dentist at 4 PM." in finals, f"the answer was deleted: {finals}"
     assert session.stop_speech is False, "the stop flag must not survive the turn"
     assert session.delivery_pending is False
+
+
+async def test_a_delivered_answer_announces_itself(state_dir):
+    """A delivered answer must move the screen, or its closing idle is a duplicate and never sent.
+
+    This is what the CI timeouts were: the text and audio arrived while the screen was already idle, so the
+    turn's final `idle` was suppressed as a duplicate and a client waiting for the next idle waited forever.
+    """
+    async with running_hub(state_dir, agent=FakeAgent(), tts=None) as hub:
+        async with Client.open(hub) as c:
+            device_id, _token, _welcome = await c.pair(modes=True)
+            await c.expect("mode")
+            session = hub.sessions[device_id]
+
+            hub._launch_turn(session, lambda g: hub._say_turn(session, g, "Dentist at 4 PM."))
+            msgs = await c.until(is_type("state", screen="idle"), timeout=10)
+
+    screens = [m["screen"] for m in msgs if isinstance(m, dict) and m.get("type") == "state"]
+    assert "thinking" in screens, f"the delivery never said it was working: {screens}"
+    assert screens[-1] == "idle"
