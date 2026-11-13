@@ -32,12 +32,21 @@ for name in ("settings.py", "hub.py", "cli.py", "agent.py", "store.py", "control
 print("modules present:" if not missing else f"MISSING: {missing}")
 PY
 
-# netstat on Windows emits CRLF; a trailing carriage return makes taskkill fail.
 # Restart through the product's own command, not a per-machine launcher: the old version hard-coded
 # a Windows batch file in one person's home directory, which is neither portable nor publishable.
-hermes hail restart >/dev/null 2>&1 || echo "could not restart the hub (run: hermes hail restart)"
-sleep 12
-COUNT=$( (hermes hail devices 2>/dev/null | grep -c .) || true )
-echo "hub reports $COUNT device line(s)"
-[ "$COUNT" = "1" ] || { echo "FAILED: expected exactly one hub"; tail -5 "${HUB_LOG:-$HERMES/hail-hermes/hub.log}"; exit 1; }
+if ! hermes hail restart >/dev/null 2>&1; then
+  echo "FAILED: could not restart the hub (run: hermes hail restart)" >&2
+  tail -5 "${HUB_LOG:-$HERMES/hail-hermes/hub.log}" 2>/dev/null || true
+  exit 1
+fi
+
+# Ask the hub itself, instead of counting `hermes hail devices` lines (quality review): that command lists
+# devices, so two paired watches failed the check and no paired devices let a dead hub pass. This waits for
+# the product's own /status to say running, and fails loudly if it never does.
+if ! python "$REPO/tools/hub-health.py" "${HAIL_HUB_URL:-http://127.0.0.1:8767/status}" \
+     --timeout "${HAIL_HEALTH_TIMEOUT:-40}"; then
+  echo "FAILED: the hub is not answering after the restart" >&2
+  tail -5 "${HUB_LOG:-$HERMES/hail-hermes/hub.log}" 2>/dev/null || true
+  exit 1
+fi
 echo "deployed"
