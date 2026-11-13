@@ -47,7 +47,13 @@ def read_facts(state_dir: str | Path) -> list[str]:
 
 
 def append_fact(fact: str, state_dir: str | Path) -> Path:
-    """Append one fact and return the file. Raises ValueError for an empty or duplicate fact."""
+    """Append one fact and return the file. Raises ValueError for an empty or duplicate fact.
+
+    The read, the append and the trim all happen under one lock on one handle. Trimming used to run after
+    the lock was released and rewrote the file from a separate handle, so two callers — the dashboard and a
+    voice command, say — could interleave: one trims a snapshot that predates the other's append, and that
+    fact is gone (quality review). At MAX_FACTS this is not a rare race; it is every write.
+    """
     cleaned = " ".join(str(fact).strip().split())[:MAX_FACT_CHARS].strip()
     if not cleaned:
         raise ValueError("memory fact must not be empty")
@@ -69,9 +75,9 @@ def append_fact(fact: str, state_dir: str | Path) -> Path:
                 needs_newline = fh.read(1) != "\n"
             fh.write(("\n" if needs_newline else "") + f"- {cleaned}\n")
             fh.flush()
+            _trim_locked(fh)
         finally:
             filelock.unlock(fh)
-    _trim(target)
     return target
 
 
@@ -83,13 +89,17 @@ def facts_block(state_dir: str | Path) -> str:
     return "Facts the owner asked you to remember:\n" + "\n".join(f"- {fact}" for fact in facts)
 
 
-def _trim(path: Path) -> None:
-    """Keep the newest MAX_FACTS lines so a long-lived install cannot grow without bound."""
-    try:
-        lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    except OSError:
-        return
+def _trim_locked(fh) -> None:
+    """Keep the newest MAX_FACTS lines so a long-lived install cannot grow without bound.
+
+    Called with the caller's lock already held and the same handle: the rewrite is part of the append, not
+    a follow-up that another writer can slip in front of.
+    """
+    fh.seek(0)
+    lines = [line for line in fh.read().splitlines() if line.strip()]
     if len(lines) <= MAX_FACTS:
         return
-    with open(path, "w", encoding="utf-8") as fh:
-        fh.write("\n".join(lines[-MAX_FACTS:]) + "\n")
+    fh.seek(0)
+    fh.truncate()
+    fh.write("\n".join(lines[-MAX_FACTS:]) + "\n")
+    fh.flush()
