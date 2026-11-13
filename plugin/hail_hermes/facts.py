@@ -30,12 +30,7 @@ def facts_path(state_dir: str | Path) -> Path:
     return Path(state_dir).expanduser() / FACTS_FILENAME
 
 
-def read_facts(state_dir: str | Path) -> list[str]:
-    """Every remembered fact, oldest first. A missing file is an empty memory, not an error."""
-    try:
-        raw = facts_path(state_dir).read_text(encoding="utf-8")
-    except (FileNotFoundError, OSError):
-        return []
+def _parse(raw: str) -> list[str]:
     facts = []
     for line in raw.splitlines():
         line = line.strip()
@@ -44,6 +39,33 @@ def read_facts(state_dir: str | Path) -> list[str]:
         if line:
             facts.append(line)
     return facts
+
+
+def read_facts(state_dir: str | Path) -> list[str]:
+    """Every remembered fact, oldest first. A missing file is an empty memory, not an error.
+
+    The read takes the same lock an append does, so a caller never observes a half-written fact or the
+    middle of a trim rewrite. A reader that skipped the lock could catch either — the write of one line is
+    several bytes, and a rewrite replaces the whole file in place.
+    """
+    path = facts_path(state_dir)
+    try:
+        handle = open(path, "r+b")
+    except FileNotFoundError:
+        return []
+    except OSError:
+        # A read-only copy (or a filesystem without advisory locks): read it unlocked rather than fail.
+        try:
+            return _parse(path.read_text(encoding="utf-8"))
+        except OSError:
+            return []
+    with handle as fh:
+        filelock.lock(fh)
+        try:
+            raw = fh.read().decode("utf-8", "replace")
+        finally:
+            filelock.unlock(fh)
+    return _parse(raw)
 
 
 def append_fact(fact: str, state_dir: str | Path) -> Path:

@@ -18,7 +18,7 @@ from typing import Any, AsyncIterator, Iterator
 
 from .agent import AgentError, DeviceInfo
 from . import filelock
-from .facts import facts_path
+from .facts import facts_path, read_facts
 from .settings import read_settings
 from .store import default_state_dir
 
@@ -296,7 +296,9 @@ class QuickAgent:
         try:
             stat = mem_path.stat()
             if self._memory_mtime != stat.st_mtime:
-                raw = mem_path.read_text(encoding="utf-8").strip()
+                # Through the facts reader, so a prompt never picks up a half-written fact: it takes the
+                # same lock an append or a trim does.
+                raw = "\n".join(f"- {fact}" for fact in read_facts(state)) if state is not None else ""
                 self._memory_text = raw[-MAX_PROMPT_MEMORY_CHARS:] if raw else ""
                 self._memory_mtime = stat.st_mtime
         except OSError:

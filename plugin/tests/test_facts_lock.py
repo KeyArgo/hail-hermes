@@ -50,17 +50,23 @@ def test_concurrent_appends_at_the_limit_lose_nothing(tmp_path):
     assert not missing, f"appends lost to the trim race: {missing}"
 
 
-def test_the_trimmed_file_is_never_torn(tmp_path):
-    """A reader must never see a half-rewritten file, whatever moment it looks."""
+def test_a_reader_never_sees_a_partial_fact(tmp_path):
+    """The product's own reader takes the lock, so it never reports a fragment of a line.
+
+    An append writes one line over several bytes, and a trim rewrites the whole file in place: without the
+    lock a reader can catch either halfway. `read_facts` is what the pane, the dashboard and quick mode all
+    use, so this is the guarantee that matters.
+    """
     _seed(tmp_path, MAX_FACTS)
     stop = threading.Event()
     torn: list[str] = []
 
     def reader() -> None:
         while not stop.is_set():
-            for line in facts_path(tmp_path).read_text(encoding="utf-8").splitlines():
-                if line.strip() and not line.startswith("- "):
-                    torn.append(line)
+            for fact in read_facts(tmp_path):
+                # A fact is a whole sentence here; a fragment would be a prefix of one.
+                if not fact.startswith(("seed ", "tail fact ")) and fact != "the newest fact":
+                    torn.append(fact)
                     return
 
     def writer() -> None:
@@ -75,8 +81,19 @@ def test_the_trimmed_file_is_never_torn(tmp_path):
         stop.set()
         watch.join(timeout=10)
 
-    assert not torn, f"a reader saw a partial line: {torn[:3]}"
+    assert not torn, f"a reader saw a partial fact: {torn[:3]}"
     assert len(read_facts(tmp_path)) == MAX_FACTS
+
+
+def test_the_finished_file_is_whole_lines(tmp_path):
+    """After the work is done, every line is a fact and the file ends cleanly."""
+    _seed(tmp_path, MAX_FACTS)
+    for i in range(12):
+        append_fact(f"tail fact {i}", tmp_path)
+    raw = facts_path(tmp_path).read_bytes()
+    assert raw.endswith(b"\n")
+    for line in raw.decode("utf-8").splitlines():
+        assert line.startswith("- ") and len(line) > 2, line
 
 
 def test_the_limit_still_drops_the_oldest_fact(tmp_path):
