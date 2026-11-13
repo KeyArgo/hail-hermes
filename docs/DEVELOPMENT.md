@@ -43,22 +43,32 @@ python -m pytest simulator/tests -q
 python -m pytest tools/facesmith/tests -q
 ```
 
-The Kotlin suites use the Gradle wrapper:
+The Kotlin suites use the Gradle wrapper, which is **not tracked**: a prebuilt `gradle-wrapper.jar` is
+a compiled binary nobody can review, so it is generated instead. Opening either project in Android
+Studio does it, or one command with Gradle on PATH:
+
+```bash
+cd wear   && gradle wrapper --gradle-version 8.10.2 --distribution-type bin
+cd android && gradle wrapper --gradle-version 8.10.2 --distribution-type bin
+```
+
+Then, as usual:
 
 ```bash
 cd wear && ./gradlew :app:assembleDebug :app:testDebugUnitTest
 cd android && ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
-They need JDK 17 and Android SDK 35. The CI workflows use the runner's Android SDK rather than
+`gradle/wrapper/gradle-wrapper.properties` is tracked and pins `distributionSha256Sum`, so the wrapper
+validates the Gradle distribution it downloads. They need JDK 17 and Android SDK 35. The CI workflows use the runner's Android SDK rather than
 `android-actions/setup-android`, which currently stops on a preview-license prompt.
 
 ## What CI runs
 
 | Workflow | Trigger | Command |
 |---|---|---|
-| `.github/workflows/wear.yml` | changes under `wear/` or the workflow | `./gradlew :app:assembleDebug :app:testDebugUnitTest` |
-| `.github/workflows/android.yml` | changes under `android/` or the workflow | the same command in `android/` |
+| `.github/workflows/wear.yml` | changes under `wear/` or the workflow | `gradle wrapper` then `./gradlew :app:assembleDebug :app:testDebugUnitTest` |
+| `.github/workflows/android.yml` | changes under `android/` or the workflow | the same two commands in `android/` |
 
 The Python suites are run by `scripts/test.sh` and recorded in `TESTING.md`; there is no Python CI
 workflow in this repo at 1.0.0. The badge at the top of the README points at `wear.yml`.

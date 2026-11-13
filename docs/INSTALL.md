@@ -51,7 +51,8 @@ Get it either way:
 - **Build it yourself** (JDK 17 and the Android SDK):
 
   ```bash
-  cd wear && ./gradlew :app:assembleDebug   # wear/app/build/outputs/apk/debug/app-debug.apk
+  cd wear && gradle wrapper --gradle-version 8.10.2   # the wrapper is generated, not tracked
+  cd wear && ./gradlew :app:assembleDebug             # wear/app/build/outputs/apk/debug/app-debug.apk
   ```
 
 Installing it needs adb with wireless debugging on the watch — there is no Play Store listing yet:
