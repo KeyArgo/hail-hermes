@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Hail Hermes">
+  <defs>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#241a38"/><stop offset="1" stop-color="#0b0d19"/></linearGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc35c"/><stop offset="1" stop-color="#ff5f5a"/></linearGradient>
+    <linearGradient id="strap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a2b52"/><stop offset=".5" stop-color="#4d3a6b"/><stop offset="1" stop-color="#3a2b52"/></linearGradient>
+    <linearGradient id="case" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff6b5a"/></linearGradient>
+    <linearGradient id="v" gradientUnits="userSpaceOnUse" x1="427" y1="560" x2="597" y2="660"><stop offset="0" stop-color="#ffc35c"/><stop offset="1" stop-color="#ff5f5a"/></linearGradient>
+    <radialGradient id="scr" cx=".45" cy=".35" r=".8"><stop offset="0" stop-color="#2a1d3e"/><stop offset="1" stop-color="#0d0a18"/></radialGradient>
+    <radialGradient id="g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff8a52" stop-opacity=".45"/><stop offset="1" stop-color="#ff6b5a" stop-opacity="0"/></radialGradient>
+    <clipPath id="tile"><rect x="64" y="64" width="896" height="896" rx="208"/></clipPath>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="208" fill="url(#b)"/>
+  <circle cx="512" cy="512" r="420" fill="url(#g)"/>
+  <!-- straps run off the tile: a real watch on a wrist -->
+  <g clip-path="url(#tile)">
+    <path d="M390 0h244l-20 240H410Z" fill="url(#strap)"/>
+    <path d="M410 784h204l20 240H390Z" fill="url(#strap)"/>
+    <g fill="#ffffff" fill-opacity=".07"><rect x="420" y="40" width="184" height="14" rx="7"/><rect x="420" y="100" width="184" height="14" rx="7"/><rect x="420" y="160" width="184" height="14" rx="7"/><rect x="420" y="850" width="184" height="14" rx="7"/><rect x="420" y="910" width="184" height="14" rx="7"/></g>
+  </g>
+  <!-- case -->
+  <rect x="300" y="226" width="424" height="572" rx="150" fill="url(#case)"/>
+  <rect x="330" y="256" width="364" height="512" rx="124" fill="url(#scr)"/>
+  <rect x="716" y="420" width="34" height="96" rx="14" fill="#ffd27a"/>
+  <!-- the talking face -->
+  <ellipse cx="452" cy="448" rx="28" ry="38" fill="#ffe7cc"/>
+  <ellipse cx="572" cy="448" rx="28" ry="38" fill="#ffe7cc"/>
+  <g stroke="url(#v)" stroke-width="30" stroke-linecap="round">
+    <path d="M427 600v20"/><path d="M469 582v56"/><path d="M512 568v84"/><path d="M555 582v56"/><path d="M597 600v20"/>
+  </g>
+  <!-- its voice leaves the watch -->
+  <g fill="none" stroke="url(#a)" stroke-linecap="round">
+    <path d="M800 440a120 120 0 0 1 0 150" stroke-width="30" opacity=".9"/>
+    <path d="M860 390a200 200 0 0 1 0 250" stroke-width="24" opacity=".55"/>
+    <path d="M224 440a120 120 0 0 0 0 150" stroke-width="30" opacity=".9"/>
+    <path d="M164 390a200 200 0 0 0 0 250" stroke-width="24" opacity=".55"/>
+  </g>
+  <rect x="68" y="68" width="888" height="888" rx="204" fill="none" stroke="url(#a)" stroke-width="8" opacity=".35"/>
+  <path d="M842 176c-40 6-78 26-104 58 30-6 58-4 82 6-24 4-46 14-62 30 28-2 52 4 70 16-14-34-8-80 14-110Z" fill="#f2f4ff" opacity=".9"/>
+</svg>
