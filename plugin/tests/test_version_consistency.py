@@ -88,9 +88,27 @@ def test_the_stamp_never_pairs_a_live_revision_with_a_stale_commit(monkeypatch) 
         "describe": "",
     }.get(args[0], ""))
 
+    monkeypatch.setattr(vs, "_dev_base", lambda: 0)  # the count itself is tested below
     info = vs.as_dict()
     assert info["commit"] == live, "the hash must be the commit that is running"
     assert info["commit_short"] == live[:8]
     assert info["commit_date"] == "2026-11-11T16:32:00-07:00", "a live hash needs the live date too"
     assert info["source"] == "git"
     assert info["version"] == "1.0.0-dev.349"
+
+
+def test_the_dev_count_continues_from_the_dev_repo(monkeypatch) -> None:
+    """The public repo began fresh while dev builds already read dev.352: N = dev_base + commits."""
+    import json
+    from pathlib import Path
+
+    from hail_hermes import version_stamp as vs
+
+    base = json.loads((Path(__file__).resolve().parents[2] / ".release-check.json").read_text())["dev_base"]
+    assert base >= 352, "a new build must never read older than an installed dev build"
+    assert vs._dev_base() == base
+    monkeypatch.setattr(vs, "_find_build_info", lambda: {})
+    monkeypatch.setattr(vs, "_catalog_pin", lambda *a: "")
+    monkeypatch.setattr(vs, "_git", lambda *args: {"rev-parse": "a" * 40, "rev-list": "24", "describe": "",
+                                                    "status": "", "log": ""}.get(args[0], ""))
+    assert vs.as_dict()["version"] == f"1.0.0-dev.{base + 24}"
