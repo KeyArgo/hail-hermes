@@ -77,7 +77,8 @@ def test_any_scheme_is_no_longer_an_origin():
 
 
 def test_a_remote_page_is_still_refused():
-    for origin in ("https://example.com", "http://192.168.1.10:8765", "http://10.0.0.5:3000"):
+    # RFC 5737 documentation addresses: a remote page, without naming anyone's actual network.
+    for origin in ("https://example.com", "http://192.0.2.10:8765", "http://198.51.100.5:3000"):
         assert not _allowed_device_origin(origin), origin
 
 

@@ -17,6 +17,13 @@ from hail_hermes.quick import QuickAgent
 from hail_hermes.settings import read_settings, update_settings
 
 
+class _QuickEcho:
+    """Minimal quick backend: a session in quick mode needs one to exist."""
+
+    async def run(self, device, text):
+        yield "ok"
+
+
 class SlotRecordingAgent:
     """Fake agent that records session_id, new_session, and title arguments."""
 
@@ -165,8 +172,9 @@ async def test_new_session_called_and_lazy_slot_creation(state_dir):
             assert agent.calls[1]["new_session"] is False
 
 
-async def test_remember_writes_the_plugins_own_file_and_never_core_memory(state_dir, tmp_path, monkeypatch):
-    """Review item 3: `remember …` must not append to Hermes' MEMORY.md."""
+async def test_remember_in_quick_mode_writes_the_plugins_file_and_never_core_memory(
+        state_dir, tmp_path, monkeypatch):
+    """Review item 3 + quality review: quick mode keeps the fact locally, core's file is untouched."""
     core_memory = tmp_path / "profiles" / "work" / "memories" / "MEMORY.md"
     core_memory.parent.mkdir(parents=True, exist_ok=True)
     initial = "# Existing Memories\n- Initial entry\n"
@@ -174,9 +182,10 @@ async def test_remember_writes_the_plugins_own_file_and_never_core_memory(state_
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "profiles" / "work"))
 
     agent = FakeAgent()
-    async with running_hub(state_dir, agent=agent) as hub:
+    async with running_hub(state_dir, agent=agent, quick_agent=_QuickEcho()) as hub:
         async with Client.open(hub) as c:
-            await c.pair()
+            device_id, _token, _welcome = await c.pair()
+            hub.store.set_device_mode(device_id, "quick")
             await c.send("text", text="Remember that I prefer dark mode.")
             msgs = await c.until(is_type("state", screen="idle"))
             assist = [m for m in msgs if isinstance(m, dict) and m.get("type") == "transcript" and m.get("role") == "assistant"]
@@ -190,8 +199,8 @@ async def test_remember_writes_the_plugins_own_file_and_never_core_memory(state_
     assert core_memory.read_text(encoding="utf-8") == initial
 
     # The fact lives in the plugin's own file, capped at 300 characters.
-    facts = read_facts(state_dir)
-    assert facts == ["I prefer dark mode", "x" * 300]
+    stored = read_facts(state_dir)
+    assert stored == ["I prefer dark mode", "x" * 300]
 
 
 def test_quick_agent_prompt_includes_facts_and_reloads_on_mtime(state_dir, tmp_path):
