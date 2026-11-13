@@ -732,7 +732,7 @@ function WristSettingsView({
         timeoutMs: 4000
       })
       if (!res?.ok) {
-        setErrorNotice(res?.error || 'Could not add memory')
+        setErrorNotice(res?.error || 'Could not add that fact')
         return
       }
       setMemoryDraft('')
@@ -741,7 +741,7 @@ function WristSettingsView({
       }
       flashSaved('Saved')
     } catch (err) {
-      setErrorNotice(err?.message || 'Could not add memory')
+      setErrorNotice(err?.message || 'Could not add that fact')
     } finally {
       setBusyKey('')
     }
@@ -1165,7 +1165,12 @@ function WristSettingsView({
       jsxs('section', {
         style: sectionStyle,
         children: [
-          jsx('strong', { children: '5. Memory (MEMORY.md)' }),
+          jsx('strong', { children: '5. Facts for quick answers' }),
+          jsx('span', {
+            style: { opacity: 0.7, fontSize: '11px' },
+            children: 'Your own list, used by quick ask. A session has Hermes\' memory instead — say ' +
+              'it in a session to change what the agent remembers; Hermes owns that file.'
+          }),
           jsx('pre', {
             style: {
               margin: 0,
@@ -1178,7 +1183,7 @@ function WristSettingsView({
               fontSize: '11px',
               fontFamily: 'var(--ui-font-mono, monospace)'
             },
-            children: memoryLines.length ? memoryLines.join('\n') : 'No memories recorded yet.'
+            children: memoryLines.length ? memoryLines.join('\n') : 'No facts yet.'
           }),
           jsxs('div', {
             style: { display: 'flex', gap: '6px' },
@@ -1186,7 +1191,7 @@ function WristSettingsView({
               jsx('input', {
                 type: 'text',
                 value: memoryDraft,
-                placeholder: 'Add a memory fact…',
+                placeholder: 'Add a fact for quick ask…',
                 style: { ...inputStyle, flex: 1 },
                 onChange: ev => setMemoryDraft(ev.target.value),
                 onKeyDown: ev => {
@@ -1199,7 +1204,7 @@ function WristSettingsView({
                 size: 'sm',
                 variant: 'secondary',
                 onClick: () => { void handleAddMemory() },
-                children: 'Add memory'
+                children: 'Add fact'
               })
             ]
           })

@@ -141,6 +141,30 @@ check('Settings keeps old settings', ws().includes('1. Character'))
 // The model list is a search problem: typing must filter it, and an empty result must say so.
 const modelSearch = document.querySelector('input[type=search]')
 check('Settings has a model search', !!modelSearch)
+// Facts are the plugin's own list for quick ask, not Hermes' MEMORY.md. Calling them "Memory
+// (MEMORY.md)" told people their additions reached the agent's memory, which they never did.
+check('the facts section is named for what it is', ws().includes('Facts for quick answers'))
+check('the facts section no longer claims to be MEMORY.md', !ws().includes('Memory (MEMORY.md)'))
+check('the section says which mode reads it', /quick ask/i.test(ws()) && /session/i.test(ws()))
+check('the pane shows the facts it has', ws().includes('The studio is upstairs'))
+const factInput = [...document.querySelectorAll('input[type=text]')]
+  .find(i => /Add a fact/i.test(i.placeholder || ''))
+check('the pane offers to add a fact', !!factInput)
+if (factInput) {
+  // React tracks the DOM value itself, so a plain assignment is invisible to it; set through the
+  // prototype setter the way a real keystroke would.
+  const setValue = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value').set
+  setValue.call(factInput, 'I like espresso')
+  factInput.dispatchEvent(new Event('input', { bubbles: true }))
+  await wait(150)
+  button('Add fact')?.click()
+  await wait(250)
+  check('adding a fact goes to the plugin route', calls.some(c => c[0] === '/memory' && c[1].includes('espresso')))
+  if (!calls.some(c => c[0] === '/memory' && c[1].includes('espresso'))) {
+    console.log('   DEBUG calls:', JSON.stringify(calls.filter(c => String(c[0]).includes('mem'))))
+    console.log('   DEBUG input value:', factInput.value)
+  }
+}
 check('Brain lists models the hub knows about', ws().includes('gpt-5.3-codex') || ws().includes('qwen3:8b'))
 if (modelSearch) {
   modelSearch.value = 'zz-no-such-model'

@@ -61,7 +61,7 @@ const CANNED = {
   '/face': { ok: true, data: null },
   '/pending': { pending: [] },
   '/models': [],
-  '/memory': { lines: [] },
+  '/memory': { ok: true, lines: ['- The studio is upstairs', '- I prefer dark mode'] },
   '/identity': { device_id: 'pane' },
   // The version chip renders nothing when this route has no version, so a scan could not see
   // the undefined token it used to reference. Canned identity makes the chip actually render.

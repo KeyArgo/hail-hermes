@@ -38,3 +38,23 @@ jobs:
             echo "::endgroup::"
           done
           exit $status
+
+  pane:
+    # The desktop pane is a React component that only a real render can judge, so it runs here rather
+    # than being asserted by grepping its source in the Python suite.
+    name: ${{ matrix.os }} / pane render
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Render and click through the pane
+        working-directory: tools/pane_jsdom
+        run: |
+          npm install --no-audit --no-fund
+          node run.mjs ../..
