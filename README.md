@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/KeyArgo/hail-hermes/actions/workflows/tests.yml"><img alt="CI" src="https://github.com/KeyArgo/hail-hermes/actions/workflows/tests.yml/badge.svg?branch=main"></a>
-  <a href="TESTING.md"><img alt="472 tests passing" src="https://img.shields.io/badge/tests-472%20passing-2ea44f?style=flat-square"></a>
+  <a href="TESTING.md"><img alt="474 tests passing" src="https://img.shields.io/badge/tests-474%20passing-2ea44f?style=flat-square"></a>
   <a href="https://github.com/NousResearch/hermes-agent/pull/154028"><img alt="Hermes plugin catalog: in review" src="https://img.shields.io/badge/plugin%20catalog-in%20review-f59e0b?style=flat-square"></a>
   <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/license-MIT-2f6bff?style=flat-square"></a>
   <a href="https://github.com/NousResearch/hermes-agent"><img alt="Hermes Agent plugin" src="https://img.shields.io/badge/Hermes%20Agent-plugin-7c3aed?style=flat-square"></a>
@@ -40,7 +40,7 @@ pair later.
   panel's header says which one is answering.
 - **A weather fast path** that answers "will it rain?" in about three seconds without a model round
   trip.
-- **Built to be checked, not believed.** 472 tests passed in the recorded suites (plugin, simulator,
+- **Built to be checked, not believed.** 474 tests passed in the recorded suites (plugin, simulator,
   face generator; 1 skipped), a simulator that needs no hardware, and a headless harness that clicks
   through the panel. The panel header names the build it is running, read from the hub itself — so
   the number you see is the number that answers.
@@ -182,10 +182,10 @@ bash scripts/test.sh
 
 | Suite | Command | Result at this commit |
 |---|---|---|
-| Plugin (Python) | `python -m pytest plugin/tests -q` | **436 passed, 1 skipped** |
+| Plugin (Python) | `python -m pytest plugin/tests -q` | **438 passed, 1 skipped** |
 | Simulator (Python) | `python -m pytest simulator/tests -q` | **6 passed** |
 | Face generator (Python) | `python -m pytest tools/facesmith/tests -q` | **30 passed** |
-| **Total** | | **472 passed, 1 skipped** |
+| **Total** | | **474 passed, 1 skipped** |
 
 Wear OS and phone apps are Kotlin/Gradle suites; CI runs `:app:assembleDebug :app:testDebugUnitTest`
 for both in [`.github/workflows/wear.yml`](.github/workflows/wear.yml) and
