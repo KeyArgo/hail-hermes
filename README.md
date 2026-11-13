@@ -15,6 +15,10 @@
   <a href="https://github.com/KeyArgo/hail-hermes/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/KeyArgo/hail-hermes?style=flat-square&color=f5b301"></a>
 </p>
 
+<p align="center">
+  <img src="docs/media/hail-watch.gif" width="100%" alt="Hail Hermes on a Galaxy Watch: hold to talk and the watch answers out loud">
+</p>
+
 <p align="center"><img src="docs/media/hail-hermes-demo.gif" alt="Hail Hermes on a real Galaxy Watch: hold to talk, and the agent answers out loud" width="100%"/></p>
 
 <p align="center"><sub><b>Recorded live on a Galaxy Watch 5 Pro</b> paired with Hermes: hold to talk, and it answers out loud. <a href="https://x.com/MHArgonaut/status/2120635088345948653">Watch the full demo ▶</a></sub></p>
