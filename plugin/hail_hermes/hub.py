@@ -1003,6 +1003,22 @@ class PocketHub:
         with contextlib.suppress(ConnectionClosed):
             await self._send(sess.ws, msg)
 
+    async def _settle(self, sess: Session) -> None:
+        """Say which screen the session is actually in, once nothing is running.
+
+        Only the task that owns the turn slot emits ``idle`` from its own ``finally``, and an
+        interrupt, a queued turn and a background hand-off result can land in any order. When two of
+        them interleave, the last frame written can be ``thinking`` with no task left owning the slot
+        to overwrite it: the watch sits on a spinner until the user touches it. So every terminal
+        path asks the session where it is and says so. ``set_screen`` already drops a duplicate
+        frame, which keeps this free when the ordinary path has just emitted ``idle``.
+        """
+        if not self._live(sess, sess.generation):
+            return
+        if self._turn_busy(sess) or sess.pending_turns:
+            return
+        await self.set_screen(sess, "listening" if sess.audio is not None else "idle")
+
     async def _session_loop(self, sess: Session) -> None:
         ws = sess.ws
         max_audio = int(self.config.max_audio_seconds * P.SAMPLE_RATE * 2)
@@ -1481,6 +1497,9 @@ class PocketHub:
             sess.turn = None
         sess.interrupted_pending = True
         await self._log_turn(sess, "interrupted")
+        # The dispatch path also sets idle, but a replacement turn may have started between the two;
+        # settling here is what guarantees at least one idle after a cancelled turn.
+        await self._settle(sess)
 
     async def _start_turn(self, sess: Session, make) -> None:
         if self._turn_busy(sess):
@@ -1591,6 +1610,10 @@ class PocketHub:
                         screen = "listening" if sess.audio is not None else "idle"
                         with contextlib.suppress(Exception):
                             await self.set_screen(sess, screen, gen)
+            # A task that lost the slot (cancelled by an interrupt, or replaced) used to leave the
+            # last frame as whatever it had reached. Ask the session where it is instead.
+            with contextlib.suppress(Exception):
+                await self._settle(sess)
 
     async def _audio_turn(self, sess: Session, gen: int, pcm: bytes) -> None:
         timing = _TurnTiming(gen=gen)

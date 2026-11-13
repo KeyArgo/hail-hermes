@@ -74,7 +74,7 @@ class ConnectionTrackerTest {
         assertTrue(ConnectionTracker.isLoopbackHost("ws://127.0.0.1:8767/pocket"))
         assertTrue(ConnectionTracker.isLoopbackHost("localhost:8767"))
         assertTrue(ConnectionTracker.isLoopbackHost("[::1]:8767"))
-        assertFalse(ConnectionTracker.isLoopbackHost("192.168.1.42:8767"))
-        assertFalse(ConnectionTracker.isLoopbackHost("ws://10.0.0.15:8767/pocket"))
+        assertFalse(ConnectionTracker.isLoopbackHost("192.0.2.42:8767"))
+        assertFalse(ConnectionTracker.isLoopbackHost("ws://192.0.2.15:8767/pocket"))
     }
 }

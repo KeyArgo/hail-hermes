@@ -11,9 +11,9 @@ from hail_hermes.store import Store
 
 def test_lan_addresses_from_getaddrinfo(monkeypatch):
     infos = [
-        (2, 1, 6, '', ('192.168.1.10', 0)),
+        (2, 1, 6, '', ('192.0.2.10', 0)),
         (2, 1, 6, 'localhost.localdomain', ('127.0.0.1', 0)),
-        (2, 1, 6, '', ('192.168.1.10', 0)),
+        (2, 1, 6, '', ('192.0.2.10', 0)),
     ]
 
     def fake_getaddrinfo(host, port, family=0):
@@ -21,7 +21,7 @@ def test_lan_addresses_from_getaddrinfo(monkeypatch):
         return infos
 
     monkeypatch.setattr('hail_hermes.hub.socket.getaddrinfo', fake_getaddrinfo)
-    assert _lan_ipv4_from_getaddrinfo() == {'192.168.1.10'}
+    assert _lan_ipv4_from_getaddrinfo() == {'192.0.2.10'}
 
 
 def test_lan_addresses_survives_getaddrinfo_error(monkeypatch):
@@ -75,7 +75,7 @@ async def test_lan_toggle_adds_and_closes_listeners(tmp_path, monkeypatch):
     async def beacon():
         await asyncio.Future()
 
-    monkeypatch.setattr('hail_hermes.hub._lan_ipv4_addresses', lambda: {'192.168.1.2'})
+    monkeypatch.setattr('hail_hermes.hub._lan_ipv4_addresses', lambda: {'192.0.2.2'})
     monkeypatch.setattr('hail_hermes.hub.serve', serve)
     monkeypatch.setattr(hub, '_beacon_loop', beacon)
     assert read_settings(tmp_path)['lan_enabled'] is False

@@ -8,8 +8,9 @@ set -eu
 # No default on purpose: this used to default to a different checkout and deploy
 # stale modules while reporting success.
 REPO="${1:?usage: deploy-plugin.sh <repo-root>}"
-DEST="C:/Users/Argo/AppData/Local/hermes/plugins/hail-hermes"
-DESKTOP="C:/Users/Argo/AppData/Local/hermes/desktop-plugins/hail-hermes"
+HERMES="${HERMES_HOME:-$HOME/.hermes}"
+DEST="${DEST:-$HERMES/plugins/hail-hermes}"
+DESKTOP="${DESKTOP:-$HERMES/desktop-plugins/hail-hermes}"
 
 echo "repo:   $REPO"
 echo "dest:   $DEST"
@@ -32,12 +33,11 @@ print("modules present:" if not missing else f"MISSING: {missing}")
 PY
 
 # netstat on Windows emits CRLF; a trailing carriage return makes taskkill fail.
-PID=$(netstat -ano 2>/dev/null | grep ":8767" | grep LISTENING | awk '{print $5}' | head -1 | tr -d '' || true)
-if [ -n "${PID:-}" ]; then /c/Windows/System32/taskkill.exe /F /PID "$PID" >/dev/null 2>&1 || echo "could not stop hub $PID"; fi
-rm -f "C:/Users/Argo/AppData/Local/hermes/hail-hermes/autostart.pid"
-powershell -NoProfile -Command "Start-Process -WindowStyle Hidden -FilePath 'C:\Users\Argo\work\start-hub.bat'" >/dev/null 2>&1
+# Restart through the product's own command, not a per-machine launcher: the old version hard-coded
+# a Windows batch file in one person's home directory, which is neither portable nor publishable.
+hermes hail restart >/dev/null 2>&1 || echo "could not restart the hub (run: hermes hail restart)"
 sleep 12
-COUNT=$(netstat -ano 2>/dev/null | grep ":8767" | grep -c LISTENING || true)
-echo "hubs listening on 8767: $COUNT"
-[ "$COUNT" = "1" ] || { echo "FAILED: expected exactly one hub"; tail -5 "C:/Users/Argo/work/hub.log"; exit 1; }
+COUNT=$( (hermes hail devices 2>/dev/null | grep -c .) || true )
+echo "hub reports $COUNT device line(s)"
+[ "$COUNT" = "1" ] || { echo "FAILED: expected exactly one hub"; tail -5 "${HUB_LOG:-$HERMES/hail-hermes/hub.log}"; exit 1; }
 echo "deployed"

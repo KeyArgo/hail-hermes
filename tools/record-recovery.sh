@@ -10,8 +10,8 @@
 set -uo pipefail
 
 SERIAL="${1:-${HAIL_ADB_SERIAL:-}}"
-ADB="${ADB:-C:/Users/Argo/work/platform-tools/adb.exe}"
-OUT_DIR="${OUT_DIR:-C:/Users/Argo/work}"
+ADB="${ADB:-adb}"
+OUT_DIR="${OUT_DIR:-${TMPDIR:-/tmp}}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 MP4="$OUT_DIR/hail-recovery-$STAMP.mp4"
 LOG="$OUT_DIR/hail-recovery-$STAMP.log"

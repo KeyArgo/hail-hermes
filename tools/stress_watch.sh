@@ -12,7 +12,7 @@ set -uo pipefail
 
 PRESSES="${1:-4}"
 GAP="${2:-18}"
-ADB="${ADB:-C:/Users/Argo/work/platform-tools/adb.exe}"
+ADB="${ADB:-adb}"
 SERIAL="${HAIL_ADB_SERIAL:-$("$ADB" devices | awk 'NR>1 && $2=="device" {print $1; exit}')}"
 BUTTON_X="${BUTTON_X:-233}"
 BUTTON_Y="${BUTTON_Y:-303}"

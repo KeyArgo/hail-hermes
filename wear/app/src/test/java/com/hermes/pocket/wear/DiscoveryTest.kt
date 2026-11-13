@@ -6,11 +6,11 @@ import org.junit.Test
 class DiscoveryTest {
     private val beacon = """{"svc":"hail-hermes","v":1,"name":"Office","port":8767,"fp":"abc"}"""
     @Test fun parsesBeaconAndSender() {
-        assertEquals(Computer("Office", "192.168.1.2", 8767, "abc"), Discovery.parse(beacon, "192.168.1.2"))
+        assertEquals(Computer("Office", "192.0.2.2", 8767, "abc"), Discovery.parse(beacon, "192.0.2.2"))
     }
     @Test fun rejectsMalformedOrInvalidBeacons() {
         for (bad in listOf("{}", "{", beacon.replace("hail-hermes", "other"), beacon.replace("\"v\":1", "\"v\":2"), beacon.replace("8767", "0"), beacon.replace("8767", "\"8767\""), beacon.replace("abc", " "), beacon.replace("Office", " "))) {
-            assertNull(bad, Discovery.parse(bad, "192.168.1.2"))
+            assertNull(bad, Discovery.parse(bad, "192.0.2.2"))
         }
     }
     @Test fun prefersSavedFingerprint() {
@@ -42,7 +42,7 @@ class DiscoveryTest {
     }
 
     @Test fun oneComputerIsChosenWhenNoFingerprintIsRemembered() {
-        val dawn = Computer("dawn", "192.168.1.38", 8767, "abc123")
+        val dawn = Computer("dawn", "192.0.2.38", 8767, "abc123")
         // A reinstall leaves no saved fingerprint; with a single computer on the network the
         // watch must connect instead of searching until it times out.
         assertEquals(dawn, Discovery.preferred(listOf(dawn), null))

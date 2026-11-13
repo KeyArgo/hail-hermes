@@ -5,9 +5,10 @@
 # almost always "not awake yet" rather than a broken build. Polling in the foreground burns the
 # session; this waits in the background and reports once.
 set -uo pipefail
-apk="${1:-/c/Users/Argo/work/hail-wear-tonight.apk}"
+apk="${1:-${HAIL_APK:-wear/app/build/outputs/apk/debug/app-debug.apk}}"
 deadline=$(( $(date +%s) + ${2:-2400} ))
-adb="/c/Users/Argo/work/platform-tools/adb.exe"
+# `adb` from PATH by default: a hard-coded SDK path is one person's machine, not a tool.
+adb="${ADB:-adb}"
 
 while [ "$(date +%s)" -lt "$deadline" ]; do
   serial="$("$adb" devices | awk 'NR>1 && $2=="device" {print $1; exit}')"
@@ -19,7 +20,7 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
     "$adb" -s "$serial" shell am start -n com.hermes.pocket.wear/.MainActivity >/dev/null 2>&1
     sleep 8
     echo "installed and launched; hub sees:"
-    (cd /c/Users/Argo && hermes hail devices 2>&1 | tail -2)
+    (cd "${HOME:-/}" && hermes hail devices 2>&1 | tail -2)
     exit 0
   fi
   sleep 15

@@ -437,7 +437,7 @@ def test_two_endpoint_adds_at_once_keep_both(monkeypatch, api_module):
 
     monkeypatch.setattr(api_module, "read_settings", slow_read)
     monkeypatch.setattr(api_module, "_notify_hub_settings_changed", lambda state_dir: None)
-    urls = ["http://10.0.0.1:8000/v1", "http://10.0.0.2:8000/v1"]
+    urls = ["http://192.0.2.1:8000/v1", "http://192.0.2.2:8000/v1"]
     threads = [threading.Thread(target=api_module.post_settings, args=({"add_endpoint": u},)) for u in urls]
     for t in threads:
         t.start()
