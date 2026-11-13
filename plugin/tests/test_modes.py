@@ -125,11 +125,6 @@ def test_parse_sessions_table():
     ]
 
 
-@pytest.mark.skipif(
-    os.environ.get("CI") == "true",
-    reason="races on shared CI runners (an interrupt and a background result arriving in either order"
-           " leave the hub without a final idle); 40/40 locally. Tracked in BACKLOG.md for 1.0.2.",
-)
 async def test_quick_streams_deltas_and_keeps_history(state_dir):
     with FakeSSEServer([["It is ", "3 PM."], ["Still ", "3 PM."]]) as sse:
         quick = QuickAgent(sse.url, "qwen-local")
@@ -170,11 +165,6 @@ async def test_quick_streams_deltas_and_keeps_history(state_dir):
                 assert quick.history(device_id) == []
 
 
-@pytest.mark.skipif(
-    os.environ.get("CI") == "true",
-    reason="same CI-only stall as the two quick-agent tests below (hub + QuickAgent against the"
-           " local SSE server, past the 30 s test limit on macOS runners); passes locally. BACKLOG.md.",
-)
 async def test_set_mode_session_uses_resume_id_and_bad_session(state_dir, tmp_path):
     fake_bin = _make_fake_hermes(tmp_path)
     recorded_sids: list[tuple[str, str]] = []
@@ -227,11 +217,6 @@ async def test_set_mode_session_uses_resume_id_and_bad_session(state_dir, tmp_pa
                 assert rem["session_id"] == "20260417_093000_b2"
 
 
-@pytest.mark.skipif(
-    os.environ.get("CI") == "true",
-    reason="races on shared CI runners (an interrupt and a background result arriving in either order"
-           " leave the hub without a final idle); 40/40 locally. Tracked in BACKLOG.md for 1.0.2.",
-)
 async def test_handoff_split_marker_speaks_on_it_and_delivers_result_later(state_dir):
     # Split [[HERMES]] across 4 deltas; verify zero marker leakage, "On it." spoken, and result spoken later.
     stt = RecordingSTT("check calendar")
