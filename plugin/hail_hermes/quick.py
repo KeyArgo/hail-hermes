@@ -138,6 +138,24 @@ def _profile_memories_dir(state_dir: str | Path | None) -> Path:
     return base / "profiles" / (p.name or "default") / "memories"
 
 
+def _core_memory_path(state_dir: str | Path | None) -> Path:
+    """Where Hermes keeps ``MEMORY.md`` — read only, never written by this plugin.
+
+    Quality review: quick mode's prompt stopped including this file when the plugin stopped writing to it,
+    so an upgrade silently emptied what quick answers knew about the owner. Reading it is not writing it:
+    the agent still owns the format, the budget and the safety scan, and this plugin only ever looks.
+    ``memory_path`` in Settings still points somewhere else when the owner has moved their profile.
+    """
+    if state_dir is not None:
+        try:
+            configured = str(read_settings(state_dir).get("memory_path") or "").strip()
+        except Exception:
+            configured = ""
+        if configured:
+            return Path(configured).expanduser()
+    return _profile_memories_dir(state_dir) / "MEMORY.md"
+
+
 def _close_response(resp: Any) -> None:
     with contextlib.suppress(Exception):
         fp = getattr(resp, "fp", None)
@@ -224,6 +242,9 @@ class QuickAgent:
         self._user_file: Path | None = None
         self._user_mtime: float | None = None
         self._user_text: str = ""
+        self._core_file: Path | None = None
+        self._core_mtime: float | None = None
+        self._core_text: str = ""
         self._refresh_soul()
         self._refresh_memories()
         self.max_history = max_history
@@ -259,6 +280,7 @@ class QuickAgent:
         state = self._effective_state_dir()
         user_path = _profile_memories_dir(state) / "USER.md"
         mem_path = facts_path(state) if state is not None else Path("")
+        core_path = _core_memory_path(state)
         if self._memory_file != mem_path:
             self._memory_file = mem_path
             self._memory_mtime = None
@@ -267,6 +289,10 @@ class QuickAgent:
             self._user_file = user_path
             self._user_mtime = None
             self._user_text = ""
+        if self._core_file != core_path:
+            self._core_file = core_path
+            self._core_mtime = None
+            self._core_text = ""
         try:
             stat = mem_path.stat()
             if self._memory_mtime != stat.st_mtime:
@@ -276,6 +302,17 @@ class QuickAgent:
         except OSError:
             self._memory_mtime = None
             self._memory_text = ""
+        try:
+            # Read only: the same bytes the agent's memory tool keeps, so nothing an owner already told
+            # Hermes disappears from quick answers after an upgrade.
+            stat = core_path.stat()
+            if self._core_mtime != stat.st_mtime:
+                raw = core_path.read_text(encoding="utf-8").strip()
+                self._core_text = raw[-MAX_PROMPT_MEMORY_CHARS:] if raw else ""
+                self._core_mtime = stat.st_mtime
+        except OSError:
+            self._core_mtime = None
+            self._core_text = ""
         try:
             stat = user_path.stat()
             if self._user_mtime != stat.st_mtime:
@@ -295,6 +332,8 @@ class QuickAgent:
         if self._soul_text:
             parts.append(self._soul_text)
         parts.append(base_rules)
+        if self._core_text:
+            parts.append(f"Memory from Hermes (read-only; the agent owns it):\n{self._core_text}")
         if self._memory_text:
             parts.append(f"Facts you were asked to remember:\n{self._memory_text}")
         if self._user_text:

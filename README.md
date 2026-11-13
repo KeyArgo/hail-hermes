@@ -198,10 +198,11 @@ because it has no JDK. Details and recorded results: [TESTING.md](TESTING.md).
   the CLI audio routes and `agent.auxiliary_client` because Hermes has no public plugin API for
   "speak this" yet. Those imports are lazy and guarded: if a release moves them, the panel keeps
   working as text and says speech is unavailable, rather than failing to load.
-- **"Remember …" is Hail Hermes' memory, not the agent's.** The plugin keeps what you ask it to
-  remember in its own `facts.md` and reads it in quick mode; it never appends to Hermes'
-  `MEMORY.md`. To change what the agent itself remembers, say it in a normal turn — the memory
-  toolset owns that file, with its own format, budget and safety scan.
+- **"Remember …" depends on the mode you say it in.** In a session the sentence goes to the agent
+  untouched — its memory toolset owns `MEMORY.md`, with its own format, budget and safety scan. In
+  quick mode there is no agent to hand it to, so the plugin keeps the fact in its own `facts.md` and
+  replays it on the next quick question. Either way the plugin never appends to `MEMORY.md`; quick
+  mode reads that file, read-only, so an upgrade does not lose what Hermes already knows.
 - **Model discovery is deliberately shallow.** The hub reads no credential file at all (catalog rule
   11): it offers the configured model, any local endpoint, and the model *names* Hermes has cached.
   A name in that list is visible, not authorised — Hermes decides whether your account may use it,

@@ -34,7 +34,7 @@ Stored in `settings.json` in the hub state directory.
 | `slots` | `[]` | Up to three watch session slots, each `{id, name, title, slot?}`. |
 | `stt_threads` | CPU count | Worker threads for local speech-to-text. |
 | `soul_path` | `<state>/soul.md` | Where the personality text lives. |
-| `memory_path` | `""` | Override for Hermes' `MEMORY.md`; empty resolves the active profile. |
+
 | `stt` | `"auto"` | `auto`, `parakeet` or `hermes`. |
 | `tts` | `"auto"` | `auto`, `piper`, `kokoro`, `edge` or `none`. |
 | `character` | `"nous-warm"` | Active look: `hermes`, `nous`, `nous-dark`, `nous-light`, `nous-white`, `nous-soft`, `nous-teal`, `nous-warm`. |
