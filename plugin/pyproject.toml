@@ -23,7 +23,9 @@ tts = ["edge-tts>=6,<8"]
 tts-kokoro = ["kokoro-onnx>=0.4,<1", "onnxruntime>=1.17,<2"]
 stt-parakeet = ["sherpa-onnx>=1.10,<2"]
 tts-piper = ["piper-tts>=1.2,<2"]
-test = ["pytest>=8,<10", "numpy>=1.26,<3"]
+test = ["pytest>=8,<10", "pytest-asyncio>=0.24,<2", "numpy>=1.26,<3"]
+# ^ pytest-asyncio is listed because the async tests are marked, not collected by a plugin the
+#   CI happens to have. Without it here a clean install collects them and reports "unknown mark".
 
 [project.scripts]
 hail-hermes = "hail_hermes.cli:main"

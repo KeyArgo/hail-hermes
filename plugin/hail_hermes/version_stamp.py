@@ -122,7 +122,12 @@ def _dev_suffix() -> str:
 def as_dict() -> dict:
     """Everything a status line, a bug report or a support question needs."""
     build = _find_build_info()
-    commit = build.get("commit") or _git("rev-parse", "HEAD")
+    live = _git("rev-parse", "HEAD")
+    if live and build.get("commit") and live != build["commit"]:
+        # BUILD_INFO.json is a snapshot; in a checkout it goes stale at the next commit. Mixing it
+        # with live git printed a dev count beside a hash two commits old, so git wins for every field.
+        build = {}
+    commit = build.get("commit") or live
     dirty = build.get("dirty")
     if dirty is None:
         status = _git("status", "--porcelain")

@@ -855,7 +855,7 @@ function WristSettingsView({
             children: `Using now: ${cfg.provider || 'Hermes default'}${cfg.model ? ' · ' + cfg.model : ''}`
           }),
           jsx('div', { style: { color: textSecondary }, children: 'Quick picks on the watch — pick up to five' }),
-          jsx('div', { style: { color: textSecondary, fontSize: '11px' }, children: 'These are the models the wrist can switch between. Only models Hermes has already authorised appear here.' }),
+          jsx('div', { style: { color: textSecondary, fontSize: '11px' }, children: 'These are the models the wrist can switch between. The list is visible, not verified: it is the configured model, local endpoints and the names Hermes has cached, and Hermes decides at answer time.' }),
           jsx(ModelPicker, {
             multi: true,
             max: 5,
@@ -1248,6 +1248,15 @@ function WristSettingsView({
             ]
           }),
           jsx('div', { style: { color: textSecondary }, children: 'Put your watch and this computer on the same home Wi-Fi.' }),
+          // Off is the safe default, and an off listener looks exactly like a broken watch. Say it in
+          // words here, where the switch is, instead of leaving a user to conclude the app is dead.
+          cfg.lan_enabled
+            ? null
+            : jsx('div', {
+              style: { color: '#e0b341', fontSize: '12px' },
+              children: 'Connections are off. Until you turn this on, no watch can find this computer — '
+                + 'and nothing else changes: the panel and the hub stay on this machine only.'
+            }),
           jsx('div', { style: { color: textSecondary }, children: 'Paired devices' }),
           pairedDevices.length === 0
             ? jsx('div', { style: { color: textSecondary }, children: 'No paired devices.' })

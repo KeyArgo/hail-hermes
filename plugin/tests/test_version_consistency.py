@@ -67,3 +67,30 @@ def test_the_stamp_uses_the_house_format() -> None:
     assert "build.commit_date" in text and "slice(0, 10)" in text, "the date, day-precision"
     assert "slice(0, 8)" in text, "the short commit, eight characters"
     assert "ui-monospace" in text, "the stamp is code-shaped: monospace, like the other chips"
+
+
+def test_the_stamp_never_pairs_a_live_revision_with_a_stale_commit(monkeypatch) -> None:
+    """The chip printed `-dev.349` beside a hash two commits old, because version came from live git
+    while the commit came from BUILD_INFO.json. Both fields must come from one source."""
+    from hail_hermes import version_stamp as vs
+
+    stale = "0" * 40
+    monkeypatch.setattr(vs, "_find_build_info", lambda: {
+        "version": "1.0.0", "commit": stale, "commit_date": "2020-01-01T00:00:00Z",
+        "built_at": "2020-01-01T00:00:00Z", "channel": "dev", "dirty": False,
+    })
+    live = "a" * 40
+    monkeypatch.setattr(vs, "_git", lambda *args: {
+        "rev-parse": live,
+        "rev-list": "349",
+        "log": "2026-11-11T16:32:00-07:00",
+        "status": "",
+        "describe": "",
+    }.get(args[0], ""))
+
+    info = vs.as_dict()
+    assert info["commit"] == live, "the hash must be the commit that is running"
+    assert info["commit_short"] == live[:8]
+    assert info["commit_date"] == "2026-11-11T16:32:00-07:00", "a live hash needs the live date too"
+    assert info["source"] == "git"
+    assert info["version"] == "1.0.0-dev.349"
