@@ -8,6 +8,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = process.argv[2] || join(here, '..', '..')
+// `--fresh` renders the pane the way a brand-new profile looks: nothing paired, no models, no facts, no
+// sessions. A pane that only ever sees a populated profile is a pane whose empty states are untested.
+const FRESH = process.argv.includes('--fresh')
 const sdk = join(process.cwd(), 'node_modules', '@hermes', 'plugin-sdk')
 mkdirSync(sdk, { recursive: true })
 cpSync(join(repo, 'tools/pane_stub/sdk-stub.mjs'), join(sdk, 'index.mjs'))
@@ -30,6 +33,15 @@ g.fetch = async () => { throw new Error('no network in harness') }
 const main = readFileSync(join(repo, 'tools/pane_stub/main.mjs'), 'utf8')
 const canned = main.slice(main.indexOf('const CANNED'), main.indexOf('const ctx'))
 const CANNED = new Function('const NOW = Date.now() / 1000;' + canned + '\nreturn CANNED')()
+if (FRESH) {
+  CANNED['/models'] = []
+  CANNED['/hermes-models'] = { providers: [], models: [] }
+  CANNED['/memory'] = { ok: true, lines: [] }
+  CANNED['/sessions'] = { sessions: [] }
+  CANNED['/slots'] = { slots: [] }
+  CANNED['/pending'] = { pending: [] }
+  CANNED['/settings'] = { ...(CANNED['/settings'] || {}), lan_enabled: false, model: '', provider: '' }
+}
 const { default: plugin } = await import(pathToFileURL(pluginCopy).href)
 const { createRoot } = await import('react-dom/client')
 const { createElement } = await import('react')
@@ -95,7 +107,14 @@ check('four tabs, panel first', tabs().map(b => b.textContent).join() === 'Talk,
 check('watch is not a peer tab', !tabs().some(b => b.textContent === 'Watch'))
 check('header says who answers', ws().includes('Ready') || ws().includes('Hub not running'))
 await go('Talk')
-check('Talk shows watch mirror', ws().includes('Galaxy Watch') && ws().includes('Sunny.'))
+if (FRESH) {
+  // A fresh profile: no watch, no brief, no answer — and nothing that pretends otherwise.
+  check('Talk does not claim a connected watch', !ws().includes('WATCH CONNECTED'))
+  check('Talk offers a way to pair', /pair|connect/i.test(ws()))
+  check('Talk has no crash text', !/not defined|undefined|NaN/.test(ws()))
+} else {
+  check('Talk shows watch mirror', ws().includes('Galaxy Watch') && ws().includes('Sunny.'))
+}
 check('Talk header carries the build stamp', /v\d+\.\d+\.\d+/.test(ws()))
 // One chip, drawn as a pill — the version alone. The old monospace "v… · date · sha" line read as
 // debug output, and Settings printed a second, different version of the same build.
@@ -105,7 +124,10 @@ check('the stamp carries version, date and commit',
   !!stampBtn && /^v\d+\.\d+\.\d+\S* · \d{4}-\d{2}-\d{2} · [0-9a-f]{8}$/.test(stampBtn.textContent.trim()))
 // A machine with authorised models must never be told it has none. The stub serves three Hermes
 // providers, so this is the exact falsehood a first-run judge saw.
-check('never claims "no model" when Hermes has models', !ws().includes('No model yet'))
+if (!FRESH) {
+  // On a machine with models this must never be claimed. On a fresh profile it is the honest answer.
+  check('never claims "no model" when Hermes has models', !ws().includes('No model yet'))
+}
 await go('Character')
 check('Character lists personalities', ws().includes('Concise'))
 check('Character has no crash text', !/not defined|undefined/.test(ws()))
@@ -122,10 +144,15 @@ voices[1]?.click()
 await wait(200)
 check('Voice picker saves', calls.some(c => c[0] === '/settings' && c[1].includes('character')))
 await go('Sessions')
-check('Sessions lists a chat', ws().includes('Morning chat'))
-button('Open in Hermes')?.click()
-await wait(100)
-check('Open in Hermes calls host', opened[0] === 's1')
+if (FRESH) {
+  check('an empty profile says there are no conversations',
+    ws().includes('No conversations yet') && !/undefined/.test(ws()))
+} else {
+  check('Sessions lists a chat', ws().includes('Morning chat'))
+  button('Open in Hermes')?.click()
+  await wait(100)
+  check('Open in Hermes calls host', opened[0] === 's1')
+}
 button('More')?.click()
 await wait(200)
 button('Watch')?.click()
@@ -146,7 +173,8 @@ check('Settings has a model search', !!modelSearch)
 check('the facts section is named for what it is', ws().includes('Facts for quick answers'))
 check('the facts section no longer claims to be MEMORY.md', !ws().includes('Memory (MEMORY.md)'))
 check('the section says which mode reads it', /quick ask/i.test(ws()) && /session/i.test(ws()))
-check('the pane shows the facts it has', ws().includes('The studio is upstairs'))
+check(FRESH ? 'an empty facts list says so' : 'the pane shows the facts it has',
+  FRESH ? /No facts yet/i.test(ws()) : ws().includes('The studio is upstairs'))
 const factInput = [...document.querySelectorAll('input[type=text]')]
   .find(i => /Add a fact/i.test(i.placeholder || ''))
 check('the pane offers to add a fact', !!factInput)
@@ -165,7 +193,12 @@ if (factInput) {
     console.log('   DEBUG input value:', factInput.value)
   }
 }
-check('Brain lists models the hub knows about', ws().includes('gpt-5.3-codex') || ws().includes('qwen3:8b'))
+if (FRESH) {
+  check('Brain says plainly that there is no model yet',
+    /no model/i.test(ws()) && !/undefined/.test(ws()))
+} else {
+  check('Brain lists models the hub knows about', ws().includes('gpt-5.3-codex') || ws().includes('qwen3:8b'))
+}
 if (modelSearch) {
   modelSearch.value = 'zz-no-such-model'
   modelSearch.dispatchEvent(new Event('input', { bubbles: true }))
@@ -174,7 +207,9 @@ if (modelSearch) {
   modelSearch.value = ''
   modelSearch.dispatchEvent(new Event('input', { bubbles: true }))
   await wait(250)
-  check('clearing the search restores the list', !/No model matches that|No models found/.test(ws()))
+  if (!FRESH) {
+    check('clearing the search restores the list', !/No model matches that|No models found/.test(ws()))
+  }
 }
 // The routed page is a second mount of the same component, so it is rendered last: earlier checks
 // must not accidentally click the page copy instead of the pane copy.

@@ -58,3 +58,8 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           node run.mjs ../..
+      - name: Render the pane on a brand-new profile
+        # A populated profile is the easy case: this is the one a first-run user sees, and it is where
+        # empty states, "no model yet" and an unpaired watch have to be honest.
+        working-directory: tools/pane_jsdom
+        run: node run.mjs ../.. --fresh
