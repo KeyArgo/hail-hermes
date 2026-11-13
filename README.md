@@ -135,8 +135,6 @@ the loopback-only `/control` channel.
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Repo layout, test commands, how CI works |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Real failure modes and what to do |
 | [docs/SECURITY.md](docs/SECURITY.md) | Pairing, tokens, network surface, what is not protected |
-| [docs/DEMO-SCRIPT-PANEL.md](docs/DEMO-SCRIPT-PANEL.md) | 90-second demo, panel first |
-| [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md) | 90-second demo on a physical watch |
 | [docs/PLUGIN-DESIGN.md](docs/PLUGIN-DESIGN.md) | The agreed plugin-first design |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Where new ideas go, with verdicts |
 | [docs/TEST-ON-WATCH.md](docs/TEST-ON-WATCH.md) | Testing a build on the watch |

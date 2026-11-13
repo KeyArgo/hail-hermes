@@ -32,8 +32,6 @@ Applies to Hail Hermes 1.0.0 · revised 2026-11-11
 |---|---|
 | [SECURITY.md](SECURITY.md) | Pairing, tokens, network surface, what is not protected. |
 | [../SECURITY.md](../SECURITY.md) | How to report a vulnerability. |
-| [DEMO-SCRIPT-PANEL.md](DEMO-SCRIPT-PANEL.md) | The 90-second demo, panel first. |
-| [DEMO-SCRIPT.md](DEMO-SCRIPT.md) | The 90-second demo on a physical watch. |
 | [TEST-ON-WATCH.md](TEST-ON-WATCH.md) | Building and testing on real hardware. |
 | [WATCH-CHECKLIST.md](WATCH-CHECKLIST.md) | Six checks in about a minute. |
 | [THIRD-PARTY.md](THIRD-PARTY.md) | Libraries, tools and assets this repo uses. |
