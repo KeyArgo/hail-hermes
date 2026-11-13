@@ -303,6 +303,12 @@ class Session:
     timing: _TurnTiming | None = None
     modes: bool = False
     voice_session_started: bool = False
+    # Set while a finished background answer is being delivered. An interrupt that lands in the moment
+    # between the delivery turn being launched and its first frame must stop the *speech*, not delete an
+    # answer the owner has not seen yet (see `_interrupt`).
+    delivery_pending: bool = False
+    # Set by an interrupt during a pending delivery: publish the text, skip the audio.
+    stop_speech: bool = False
     # Set by the turn-ceiling timer; read and cleared by the turn guard.
     ceiling_hit: bool = False
     ceiling_handle: Any = None
@@ -1511,6 +1517,14 @@ class PocketHub:
         """
         task = sess.turn
         running = task is not None and not task.done()
+        if running and sess.delivery_pending:
+            # A finished answer is being handed to a turn that has not reached the screen yet. Cancelling
+            # it here loses the answer outright — no text, no audio, and no `idle` to leave "thinking" on.
+            # Stop the speaking instead and let the text land.
+            sess.stop_speech = True
+            await self._log_turn(sess, "interrupted")
+            await self._settle(sess)
+            return
         if running:
             self._cancel_turn(sess)
             if sess.turn is task:
@@ -1966,7 +1980,12 @@ class PocketHub:
                     pending.popleft()
                 pending.append((now, reply))
             else:
-                await self._start_turn(sess, lambda g: self._say_turn(sess, g, reply))
+                sess.delivery_pending = True
+                try:
+                    await self._start_turn(sess, lambda g: self._say_turn(sess, g, reply))
+                except BaseException:
+                    sess.delivery_pending = False
+                    raise
         finally:
             count = self._handoff_counts.get(device_id, 1) - 1
             if count:
@@ -2390,9 +2409,13 @@ class PocketHub:
     async def _say_turn(self, sess: Session, gen: int, text: str) -> None:
         if not self._live(sess, gen):
             return
-        await self._log_turn(sess, "ask", gen=gen, source="say", text=text)
-        await self._drain_speech(sess, gen, text)
-        await self._log_turn(sess, "answer", gen=gen, source="say", text=text)
+        try:
+            await self._log_turn(sess, "ask", gen=gen, source="say", text=text)
+            await self._drain_speech(sess, gen, text)
+            await self._log_turn(sess, "answer", gen=gen, source="say", text=text)
+        finally:
+            sess.delivery_pending = False
+            sess.stop_speech = False
 
     async def _drain_speech(self, sess: Session, gen: int, reply: str) -> None:
         """Publish one assistant final and speak queued lines without overlap.
@@ -2415,7 +2438,10 @@ class PocketHub:
 
         reply_spoken = False
         matched_reply = False
-        while self._live(sess, gen):
+        while self._live(sess, gen) and not sess.stop_speech:
+            # An interrupt during a delivery wants silence, not the loss of the text above.
+            if sess.stop_speech:
+                return
             for text in batch:
                 key = text.strip()
                 if not key:
@@ -2430,7 +2456,7 @@ class PocketHub:
                 if not self._live(sess, gen):
                     return
 
-            if reply_key and not reply_spoken and not matched_reply:
+            if reply_key and not reply_spoken and not matched_reply and not sess.stop_speech:
                 await self._speak_audio(sess, gen, reply)
                 if not self._live(sess, gen):
                     return

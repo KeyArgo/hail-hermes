@@ -93,3 +93,51 @@ async def test_a_handoff_result_survives_an_interrupt_that_arrives_with_it(state
     said = [m["text"] for m in msgs
             if isinstance(m, dict) and m.get("type") == "transcript" and m.get("role") == "assistant"]
     assert any("Dentist" in text for text in said), f"the answer was swallowed: {said}"
+
+
+class BlockingTTS:
+    """TTS whose first synthesis blocks, so the interrupt lands while the delivery is in flight."""
+
+    def __init__(self):
+        self.spoken: list[str] = []
+        self.entered = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def synthesize(self, text: str, voice: str | None = None) -> bytes:
+        self.spoken.append(text)
+        self.entered.set()
+        await self.release.wait()
+        return b"\x01\x00" * 160
+
+
+async def test_an_interrupt_during_a_delivery_does_not_delete_the_answer(state_dir):
+    """The moment an answer is being handed over is the one moment it must not be deleted.
+
+    The delivery turn has been launched but has not finished when the interrupt lands; bumping the
+    generation there would take the text with it — answer gone, and no idle frame to leave "thinking" on.
+    The interrupt now silences the speech and lets the text through.
+    """
+    tts = BlockingTTS()
+    async with running_hub(state_dir, agent=FakeAgent(), tts=tts) as hub:
+        async with Client.open(hub) as c:
+            device_id, _token, _welcome = await c.pair(modes=True)
+            await c.expect("mode")
+            session = hub.sessions[device_id]
+
+            session.delivery_pending = True
+            hub._launch_turn(session, lambda g: hub._say_turn(session, g, "Dentist at 4 PM."))
+            await asyncio.wait_for(tts.entered.wait(), 10)
+
+            await c.send("interrupt")
+            await asyncio.sleep(0.1)
+            assert session.stop_speech is True, "the interrupt did not reach the in-flight delivery"
+
+            tts.release.set()
+            msgs = await c.until(is_type("state", screen="idle"), timeout=10)
+
+    finals = [m["text"] for m in msgs
+              if isinstance(m, dict) and m.get("type") == "transcript"
+              and m.get("role") == "assistant" and m.get("final")]
+    assert "Dentist at 4 PM." in finals, f"the answer was deleted: {finals}"
+    assert session.stop_speech is False, "the stop flag must not survive the turn"
+    assert session.delivery_pending is False
